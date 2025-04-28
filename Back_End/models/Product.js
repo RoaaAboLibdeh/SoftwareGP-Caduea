@@ -25,13 +25,24 @@ const productSchema = new mongoose.Schema({
     ref: 'Category',
     required: true
   },
+  discountAmount: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 0
+  },
   
-  subcategory: String, // e.g. 'Smartwatches' under Electronics
+   // e.g. 'Smartwatches' under Electronics
   
   // Pricing
   price: {
     type: Number,
     required: true
+  },
+  stock: {
+    type: Number,
+    default: 0,
+    min: 0
   },
   priceRange: {
     min: Number,
@@ -47,30 +58,23 @@ const productSchema = new mongoose.Schema({
     type: [String],
     required: true,
     enum: [
-      'mother',
-      'father',
-      'wife',
-      'husband',
-      'girlfriend',
-      'boyfriend',
-      'child',
-      'teen',
-      'friend',
-      'colleague'
+      'Parents',
+    'Friends',
+    'Colleagues',
+    'Wife/Husband', 
+    'Grandparents',
+    'Siblings',
+    'child'
     ]
   },
   occasion: {
     type: [String],
     enum: [
-      'birthday',
-      'anniversary',
-      'wedding',
-      'valentine',
-      'christmas',
-      'graduation',
-      'mothers day',
-      'fathers day',
-      'just because'
+      'Birthday',
+    'Anniversary',
+    'Valentine',
+    'Christmas',
+    'Graduation'
     ]
   },
   

@@ -1,10 +1,15 @@
+import 'package:cadeau_project/custom/theme.dart';
+import 'package:cadeau_project/userCart/userCart.dart';
+import 'package:cadeau_project/userHomePage/userHomePage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class CategoriesPage extends StatefulWidget {
-  const CategoriesPage({Key? key}) : super(key: key);
+  final String userId; // Add userId parameter
+
+  const CategoriesPage({Key? key, required this.userId}) : super(key: key);
 
   @override
   _CategoriesPageState createState() => _CategoriesPageState();
@@ -14,6 +19,43 @@ class _CategoriesPageState extends State<CategoriesPage> {
   List<dynamic> categories = [];
   bool isLoading = true;
   String errorMessage = '';
+  int _currentIndex = 1;
+
+  // Bottom Navigation Items (like SHEIN)
+  final List<BottomNavigationBarItem> _bottomNavItems = [
+    BottomNavigationBarItem(
+      icon: Icon(Icons.home_outlined),
+      activeIcon: Icon(
+        Icons.home,
+        color: Color(0xFF6F61EF),
+      ), // Active icon color
+      label: 'Home',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.category_outlined),
+      activeIcon: Icon(
+        Icons.category,
+        color: Color(0xFF6F61EF),
+      ), // Active icon color
+      label: 'Categories',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.shopping_cart_outlined),
+      activeIcon: Icon(
+        Icons.shopping_cart,
+        color: Color(0xFF6F61EF),
+      ), // Active icon color
+      label: 'Cart',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.person_outlined),
+      activeIcon: Icon(
+        Icons.person,
+        color: Color(0xFF6F61EF),
+      ), // Active icon color
+      label: 'Me',
+    ),
+  ];
 
   @override
   void initState() {
@@ -29,7 +71,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.88.5:5000/api/categories'),
+        Uri.parse('http://192.168.88.14:5000/api/categories'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -112,6 +154,91 @@ class _CategoriesPageState extends State<CategoriesPage> {
       body: RefreshIndicator(
         onRefresh: _fetchCategories,
         child: _buildContent(),
+      ),
+      // 👇 SHEIN-like Bottom Navigation Bar
+      // Bottom Navigation Bar implementation
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 8,
+              offset: Offset(0, -3),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+          child: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: (index) {
+              if (index == _currentIndex)
+                return; // 👈 Prevents duplicate pushes
+
+              setState(() => _currentIndex = index);
+
+              if (index == 0) {
+                Navigator.pushReplacement(
+                  // 👈 Use pushReplacement to avoid stack buildup
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => userHomePage(userId: widget.userId),
+                  ),
+                );
+              } else if (index == 1) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CategoriesPage(userId: widget.userId),
+                  ),
+                );
+              } else if (index == 2) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CartWidget(userId: widget.userId),
+                  ),
+                );
+              } else if (index == 3) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CartWidget(userId: widget.userId),
+                  ), // 👈 Changed to ProfilePage (assuming "Me" is a profile)
+                );
+              }
+            },
+            type: BottomNavigationBarType.fixed,
+            selectedItemColor: Color(0xFF6F61EF),
+            unselectedItemColor: Colors.grey[600],
+            selectedLabelStyle: FlutterFlowTheme.of(
+              context,
+            ).titleSmall.override(
+              fontFamily: 'Outfit',
+              color: Color(
+                0xFF6F61EF,
+              ), // Using your purple color for selected text
+              fontSize: 12, // Adjusted to match typical bottom nav text size
+              letterSpacing: 0.0,
+              fontWeight: FontWeight.w600, // Slightly bolder for selected
+            ),
+            unselectedLabelStyle: FlutterFlowTheme.of(
+              context,
+            ).titleSmall.override(
+              fontFamily: 'Outfit',
+              color: Colors.grey[600],
+              fontSize: 12,
+              letterSpacing: 0.0,
+              fontWeight: FontWeight.normal,
+            ),
+            backgroundColor: Colors.white,
+            elevation: 0,
+            showSelectedLabels: true,
+            showUnselectedLabels: true,
+            items: _bottomNavItems,
+          ),
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:cadeau_project/Categories/ListCategories.dart';
+import 'package:cadeau_project/userHomePage/userHomePage.dart';
 
 import '/custom/icon_button.dart';
 import '/custom/theme.dart';
@@ -10,7 +11,9 @@ import 'userCart_model.dart';
 export 'userCart_model.dart';
 
 class CartWidget extends StatefulWidget {
-  const CartWidget({super.key});
+  final String userId; // Add userId parameter
+
+  const CartWidget({super.key, required this.userId});
 
   static String routeName = 'cart';
   static String routePath = '/cart';
@@ -21,7 +24,7 @@ class CartWidget extends StatefulWidget {
 
 class _CartWidgetState extends State<CartWidget> {
   late CartModel _model;
-  int _currentIndex = 0;
+  int _currentIndex = 2;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -34,22 +37,34 @@ class _CartWidgetState extends State<CartWidget> {
   final List<BottomNavigationBarItem> _bottomNavItems = [
     BottomNavigationBarItem(
       icon: Icon(Icons.home_outlined),
-      activeIcon: Icon(Icons.home),
+      activeIcon: Icon(
+        Icons.home,
+        color: Color(0xFF6F61EF),
+      ), // Active icon color
       label: 'Home',
     ),
     BottomNavigationBarItem(
-      icon: Icon(Icons.category_outlined), // 👈 Changed icon
-      activeIcon: Icon(Icons.category), // 👈 Changed active icon
-      label: 'Categories', // 👈 Changed label
+      icon: Icon(Icons.category_outlined),
+      activeIcon: Icon(
+        Icons.category,
+        color: Color(0xFF6F61EF),
+      ), // Active icon color
+      label: 'Categories',
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.shopping_cart_outlined),
-      activeIcon: Icon(Icons.shopping_cart),
+      activeIcon: Icon(
+        Icons.shopping_cart,
+        color: Color(0xFF6F61EF),
+      ), // Active icon color
       label: 'Cart',
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.person_outlined),
-      activeIcon: Icon(Icons.person),
+      activeIcon: Icon(
+        Icons.person,
+        color: Color(0xFF6F61EF),
+      ), // Active icon color
       label: 'Me',
     ),
   ];
@@ -874,41 +889,89 @@ class _CartWidgetState extends State<CartWidget> {
         ),
 
         // 👇 SHEIN-like Bottom Navigation Bar
+        // Bottom Navigation Bar implementation
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.3),
+                color: Colors.grey.withOpacity(0.2),
                 spreadRadius: 1,
-                blurRadius: 5,
-                offset: Offset(0, -2),
+                blurRadius: 8,
+                offset: Offset(0, -3),
               ),
             ],
           ),
-          child: BottomNavigationBar(
-            // currentIndex: _currentIndex,
-            onTap: (index) {
-              setState(() => _currentIndex = index);
-              if (index == 1) {
-                // Categories tab index
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CategoriesPage()),
-                );
-              } else if (index == 2) {
-                // Cart
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CartWidget()),
-                );
-              }
-            },
-            type: BottomNavigationBarType.fixed,
-            selectedItemColor: Color.fromARGB(255, 130, 115, 190),
-            unselectedItemColor: Colors.grey,
-            showSelectedLabels: true,
-            showUnselectedLabels: true,
-            items: _bottomNavItems,
+          child: ClipRRect(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+            child: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: (index) {
+                if (index == _currentIndex)
+                  return; // 👈 Prevents duplicate pushes
+
+                setState(() => _currentIndex = index);
+
+                if (index == 0) {
+                  Navigator.pushReplacement(
+                    // 👈 Use pushReplacement to avoid stack buildup
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => userHomePage(userId: widget.userId),
+                    ),
+                  );
+                } else if (index == 1) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => CategoriesPage(userId: widget.userId),
+                    ),
+                  );
+                } else if (index == 2) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CartWidget(userId: widget.userId),
+                    ),
+                  );
+                } else if (index == 3) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CartWidget(userId: widget.userId),
+                    ), // 👈 Changed to ProfilePage (assuming "Me" is a profile)
+                  );
+                }
+              },
+              type: BottomNavigationBarType.fixed,
+              selectedItemColor: Color(0xFF6F61EF),
+              unselectedItemColor: Colors.grey[600],
+              selectedLabelStyle: FlutterFlowTheme.of(
+                context,
+              ).titleSmall.override(
+                fontFamily: 'Outfit',
+                color: Color(
+                  0xFF6F61EF,
+                ), // Using your purple color for selected text
+                fontSize: 12, // Adjusted to match typical bottom nav text size
+                letterSpacing: 0.0,
+                fontWeight: FontWeight.w600, // Slightly bolder for selected
+              ),
+              unselectedLabelStyle: FlutterFlowTheme.of(
+                context,
+              ).titleSmall.override(
+                fontFamily: 'Outfit',
+                color: Colors.grey[600],
+                fontSize: 12,
+                letterSpacing: 0.0,
+                fontWeight: FontWeight.normal,
+              ),
+              backgroundColor: Colors.white,
+              elevation: 0,
+              showSelectedLabels: true,
+              showUnselectedLabels: true,
+              items: _bottomNavItems,
+            ),
           ),
         ),
       ),

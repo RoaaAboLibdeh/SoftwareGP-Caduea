@@ -1,6 +1,10 @@
-import 'package:cadeau_project/Sign_login/Chooseing_Avatar.dart';
-import 'package:cadeau_project/userHomePage/userHomePage.dart';
+// ignore_for_file: unused_import, duplicate_ignore
 
+import 'package:cadeau_project/Sign_login/Chooseing_Avatar.dart';
+import 'package:cadeau_project/owner/details/menu/ownermenu_widget.dart';
+import 'package:cadeau_project/owner/details/owner_details_widget.dart';
+import 'package:cadeau_project/userHomePage/userHomePage.dart';
+// import 'package:cadeau_project/owner/menu/ownermenu_widget.dart';
 import '/custom/theme.dart';
 import '/custom/util.dart';
 import '/custom/widgets.dart';
@@ -24,7 +28,7 @@ import 'ownerThings.dart';
 
 class AuthService {
   static const String baseUrl =
-      'http://192.168.88.5:5000/api/users'; // Replace with your actual PC IP
+      'http://192.168.88.14:5000/api/users'; // Replace with your actual PC IP
 
   // Signup function
   Future<Map<String, dynamic>> signUp(
@@ -189,10 +193,22 @@ Future<void> handleLogin(
           response['user']['role'] ?? 'Customer'; // Get role from backend
       final userId = response['user']['_id'] ?? ''; // Get user ID from response
 
-      if (userRole == 'Owner' || userRole == 'owner') {
+      final ownerId = response['user']['_id'];
+
+      if (userRole == 'admin') {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => OwnerThings()),
+          MaterialPageRoute(builder: (context) => OwnerDetailsWidget()),
+        );
+      } else if (userRole == 'Owner' || userRole == 'owner') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => OwnermenuWidget(
+                  ownerId: userId,
+                ), // Passing dynamically fetched ownerId
+          ),
         );
       } else {
         Navigator.pushReplacement(
@@ -724,7 +740,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                   controller:
                                       _model.dropDownValueController ??=
                                           FormFieldController<String>(null),
-                                  options: ['Customer', 'Owner'],
+                                  options: ['Customer'],
                                   onChanged:
                                       (val) => safeSetState(
                                         () => _model.dropDownValue = val,
@@ -812,7 +828,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                             MaterialPageRoute(
                                               builder:
                                                   (context) =>
-                                                      OwnerThings(), // Replace with your Owner page
+                                                      OwnerDetailsWidget(), // Replace with your Owner page
                                             ),
                                           );
                                         }
@@ -857,6 +873,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                                     borderRadius: BorderRadius.circular(30),
                                   ),
                                 ),
+                                const SizedBox(height: 20), // <-- Add this
                               ],
                             ),
                             Container(
