@@ -28,4 +28,20 @@ router.post('/recommend', recommendProducts);
 router.put('/:id/popularity', updatePopularity);
 
 router.delete('/:id', deleteProduct); // ✅ Already imported at the top
+
+// Route: GET /products/discounted
+router.get('/discounted', async (req, res) => {
+  try {
+    const discountedProducts = await Product.find({ discountAmount: { $gt: 0 } });
+    res.json(discountedProducts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+
+
+
 module.exports = router;

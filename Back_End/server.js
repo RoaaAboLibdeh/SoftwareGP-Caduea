@@ -37,3 +37,15 @@ app.use('/api/products', productRoutes);  // <-- Now this route works!
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+
+// Middleware
+app.use(express.json());
+
+// Register route
+app.use('/products', productRoutes);
+
+// Start server
+app.listen(3000, () => {
+  console.log('Server running on port 5000');
+});
