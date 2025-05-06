@@ -27,5 +27,5 @@ router.post('/recommend', recommendProducts);
 // Popularity tracking
 router.put('/:id/popularity', updatePopularity);
 
-router.delete('/:id', deleteProduct);
+router.delete('/:id', deleteProduct); // ✅ Already imported at the top
 module.exports = router;

@@ -27,7 +27,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
       icon: Icon(Icons.home_outlined),
       activeIcon: Icon(
         Icons.home,
-        color: Color(0xFF6F61EF),
+        color: Color.fromARGB(255, 164, 145, 240),
       ), // Active icon color
       label: 'Home',
     ),
@@ -35,7 +35,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
       icon: Icon(Icons.category_outlined),
       activeIcon: Icon(
         Icons.category,
-        color: Color(0xFF6F61EF),
+        color: Color.fromARGB(255, 164, 145, 240),
       ), // Active icon color
       label: 'Categories',
     ),
@@ -43,7 +43,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
       icon: Icon(Icons.shopping_cart_outlined),
       activeIcon: Icon(
         Icons.shopping_cart,
-        color: Color(0xFF6F61EF),
+        color: Color.fromARGB(255, 164, 145, 240),
       ), // Active icon color
       label: 'Cart',
     ),
@@ -51,7 +51,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
       icon: Icon(Icons.person_outlined),
       activeIcon: Icon(
         Icons.person,
-        color: Color(0xFF6F61EF),
+        color: Color.fromARGB(255, 164, 145, 240),
       ), // Active icon color
       label: 'Me',
     ),
@@ -71,7 +71,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.88.14:5000/api/categories'),
+        Uri.parse('http://192.168.88.100:5000/api/categories'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -360,7 +360,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                         child: Center(
                           child: Icon(
                             _getIconFromString(icon),
-                            color: const Color(0xFF6F61EF),
+                            color: const Color.fromARGB(255, 164, 145, 240),
                             size: 40,
                           ),
                         ),
@@ -379,7 +379,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                 children: [
                   Icon(
                     _getIconFromString(icon),
-                    color: const Color(0xFF6F61EF),
+                    color: const Color.fromARGB(255, 164, 145, 240),
                     size: 24,
                   ),
                   const SizedBox(width: 8),

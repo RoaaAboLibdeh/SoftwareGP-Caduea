@@ -36,7 +36,7 @@ class _OwnermenuWidgetState extends State<OwnermenuWidget> {
   }
 
   Future<void> fetchOwnerData() async {
-    final url = 'http://192.168.88.12:5000/api/owners/get/${widget.ownerId}';
+    final url = 'http://192.168.88.17:5000/api/owners/get/${widget.ownerId}';
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {

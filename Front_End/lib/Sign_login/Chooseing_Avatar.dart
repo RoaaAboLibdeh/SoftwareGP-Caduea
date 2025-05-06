@@ -47,7 +47,7 @@ class _Chooseing_AvatarState extends State<Chooseing_Avatar> {
 
     try {
       final response = await http.put(
-        Uri.parse('http://192.168.88.14:5000/api/users/${widget.userId}'),
+        Uri.parse('http://192.168.88.100:5000/api/users/${widget.userId}'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'avatar': selectedAvatar}),
       );

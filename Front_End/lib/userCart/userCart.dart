@@ -39,7 +39,7 @@ class _CartWidgetState extends State<CartWidget> {
       icon: Icon(Icons.home_outlined),
       activeIcon: Icon(
         Icons.home,
-        color: Color(0xFF6F61EF),
+        color: Color.fromARGB(255, 164, 145, 240),
       ), // Active icon color
       label: 'Home',
     ),
@@ -47,7 +47,7 @@ class _CartWidgetState extends State<CartWidget> {
       icon: Icon(Icons.category_outlined),
       activeIcon: Icon(
         Icons.category,
-        color: Color(0xFF6F61EF),
+        color: Color.fromARGB(255, 164, 145, 240),
       ), // Active icon color
       label: 'Categories',
     ),
@@ -55,7 +55,7 @@ class _CartWidgetState extends State<CartWidget> {
       icon: Icon(Icons.shopping_cart_outlined),
       activeIcon: Icon(
         Icons.shopping_cart,
-        color: Color(0xFF6F61EF),
+        color: Color.fromARGB(255, 164, 145, 240),
       ), // Active icon color
       label: 'Cart',
     ),
@@ -63,7 +63,7 @@ class _CartWidgetState extends State<CartWidget> {
       icon: Icon(Icons.person_outlined),
       activeIcon: Icon(
         Icons.person,
-        color: Color(0xFF6F61EF),
+        color: Color.fromARGB(255, 164, 145, 240),
       ), // Active icon color
       label: 'Me',
     ),
@@ -944,14 +944,17 @@ class _CartWidgetState extends State<CartWidget> {
                 }
               },
               type: BottomNavigationBarType.fixed,
-              selectedItemColor: Color(0xFF6F61EF),
+              selectedItemColor: Color.fromARGB(255, 164, 145, 240),
               unselectedItemColor: Colors.grey[600],
               selectedLabelStyle: FlutterFlowTheme.of(
                 context,
               ).titleSmall.override(
                 fontFamily: 'Outfit',
-                color: Color(
-                  0xFF6F61EF,
+                color: Color.fromARGB(
+                  255,
+                  164,
+                  145,
+                  240,
                 ), // Using your purple color for selected text
                 fontSize: 12, // Adjusted to match typical bottom nav text size
                 letterSpacing: 0.0,

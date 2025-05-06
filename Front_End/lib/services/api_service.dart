@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import '../avatar_chat_page/chat_message.dart';
 
 class ApiService {
-  static const String _baseUrl = 'http://192.168.88.14:5000/api/chat';
+  static const String _baseUrl = 'http://192.168.88.100:5000/api/chat';
   final String userId;
   final String avatarId;
 

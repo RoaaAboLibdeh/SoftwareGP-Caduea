@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
   avatar: { type: String, default: "" },
   role: {
     type: String,
-    enum: ['Customer', 'admin', 'Owner'],
+    enum: ['customer', 'admin', 'owner'],
     default: 'customer'
   },
   createdAt: { type: Date, default: Date.now },
@@ -23,5 +23,8 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-const User = mongoose.models.User || mongoose.model('User', userSchema);
+// Force-delete the old model if it exists (for dev environments)
+delete mongoose.models.User;
+const User = mongoose.model('User', userSchema);
+
 module.exports = User;

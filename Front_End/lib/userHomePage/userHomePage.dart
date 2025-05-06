@@ -1,5 +1,6 @@
 import 'package:avatar_plus/avatar_plus.dart';
 import 'package:cadeau_project/avatar_chat_page/avatar_chat_page.dart';
+import 'package:cadeau_project/product/ProductDetailsForUser/ProductDetailsForUser.dart';
 import 'package:cadeau_project/userCart/userCart.dart';
 import 'package:cadeau_project/userHomePage/userHomePage_model.dart';
 import '/custom/icon_button.dart';
@@ -71,7 +72,7 @@ class _userHomePageState extends State<userHomePage> {
       icon: Icon(Icons.home_outlined),
       activeIcon: Icon(
         Icons.home,
-        color: Color(0xFF6F61EF),
+        color: Color.fromARGB(255, 164, 145, 240),
       ), // Active icon color
       label: 'Home',
     ),
@@ -79,7 +80,7 @@ class _userHomePageState extends State<userHomePage> {
       icon: Icon(Icons.category_outlined),
       activeIcon: Icon(
         Icons.category,
-        color: Color(0xFF6F61EF),
+        color: Color.fromARGB(255, 164, 145, 240),
       ), // Active icon color
       label: 'Categories',
     ),
@@ -87,7 +88,7 @@ class _userHomePageState extends State<userHomePage> {
       icon: Icon(Icons.shopping_cart_outlined),
       activeIcon: Icon(
         Icons.shopping_cart,
-        color: Color(0xFF6F61EF),
+        color: Color.fromARGB(255, 164, 145, 240),
       ), // Active icon color
       label: 'Cart',
     ),
@@ -95,7 +96,7 @@ class _userHomePageState extends State<userHomePage> {
       icon: Icon(Icons.person_outlined),
       activeIcon: Icon(
         Icons.person,
-        color: Color(0xFF6F61EF),
+        color: Color.fromARGB(255, 164, 145, 240),
       ), // Active icon color
       label: 'Me',
     ),
@@ -115,7 +116,7 @@ class _userHomePageState extends State<userHomePage> {
   Future<void> _fetchUserData() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.88.14:5000/api/users/${widget.userId}'),
+        Uri.parse('http://192.168.88.100:5000/api/users/${widget.userId}'),
       );
 
       if (response.statusCode == 200) {
@@ -161,57 +162,89 @@ class _userHomePageState extends State<userHomePage> {
     );
   }
 
-  Widget _buildSmallProductCard({
-    required String imageUrl,
-    required String title,
-    required String price,
-    String? oldPrice,
-  }) {
-    return Card(
-      elevation: 2,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              imageUrl,
-              height: 120,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
+  Widget _buildSmallProductCard({required Product product}) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailsWidget(product: product),
           ),
-          Padding(
-            padding: EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 4),
-                if (oldPrice != null)
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Product Image
+            ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              child: Image.network(
+                product.imageUrls.isNotEmpty
+                    ? product.imageUrls[0]
+                    : 'https://via.placeholder.com/150',
+                height: 160,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Product Name
                   Text(
-                    oldPrice,
+                    product.name,
                     style: TextStyle(
-                      decoration: TextDecoration.lineThrough,
-                      color: Colors.grey,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: Colors.black87,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                Text(
-                  price,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                  SizedBox(height: 6),
+                  // Prices
+                  Row(
+                    children: [
+                      if (product.isOnSale && product.discountAmount != null)
+                        Text(
+                          '\$${product.price.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                      if (product.isOnSale) SizedBox(width: 6),
+                      Text(
+                        '\$${product.discountedPrice.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green[700],
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -235,45 +268,60 @@ class _userHomePageState extends State<userHomePage> {
               children: [
                 Padding(
                   padding: EdgeInsetsDirectional.fromSTEB(16, 0, 16, 0),
+                  // Top Profile Row (Avatar + Name + Notification)
                   child: Row(
-                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(0, 6, 16, 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 8.0,
+                        ),
                         child: Container(
-                          width: 53,
-                          height: 53,
+                          width: 60,
+                          height: 60,
                           decoration: BoxDecoration(
-                            color: Color(0x4D9489F5),
                             shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF6F61EF), Color(0x4D9489F5)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0x806F61EF),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
                             border: Border.all(
                               color: Color(0xFF6F61EF),
                               width: 2,
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.all(2),
+                            padding: const EdgeInsets.all(3),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(50),
                               child:
                                   isLoading
-                                      ? CircularProgressIndicator(
-                                        strokeWidth: 2,
+                                      ? Center(
+                                        child: SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
                                       )
                                       : (userData?['avatar'] != null &&
                                           userData!['avatar'].isNotEmpty)
-                                      ? Container(
-                                        width: 300,
-                                        height: 200,
-                                        child: AvatarPlus(
-                                          userData?['avatar'] ?? 'ak',
-                                          fit: BoxFit.cover,
-                                        ),
+                                      ? AvatarPlus(
+                                        userData?['avatar'] ?? 'ak',
+                                        fit: BoxFit.cover,
                                       )
                                       : Image.network(
                                         'https://picsum.photos/seed/626/600',
-                                        width: 300,
-                                        height: 200,
                                         fit: BoxFit.cover,
                                       ),
                             ),
@@ -283,34 +331,54 @@ class _userHomePageState extends State<userHomePage> {
                       Expanded(
                         child: GestureDetector(
                           onTap: () => _navigateToAvatarChat(),
-                          child: Text(
-                            'Hey ${userData != null ? userData!['name'] ?? 'User' : 'User'}, Let\'s talk!',
-                            style: FlutterFlowTheme.of(
-                              context,
-                            ).headlineMedium.override(
-                              fontFamily: 'Outfit',
-                              color: Color(0xFF15161E),
-                              fontSize: 17,
-                              letterSpacing: 0.0,
-                              fontWeight: FontWeight.w500,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
+                            ),
+                            child: Text(
+                              'Hey ${userData != null ? userData!['name'] ?? 'User' : 'User'}, Let\'s talk!',
+                              style: FlutterFlowTheme.of(
+                                context,
+                              ).headlineMedium.override(
+                                fontFamily: 'Outfit',
+                                color: Color(0xFF15161E),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.3,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(0, 0, 16, 0),
-                        child: FlutterFlowIconButton(
-                          borderColor: Colors.transparent,
-                          borderRadius: 40,
-                          buttonSize: 40,
-                          icon: Icon(
-                            Icons.notifications_none,
-                            color: Color(0xFF15161E),
-                            size: 24,
+                        padding: const EdgeInsets.only(right: 16.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Color(0xFFF1F4F8),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0x1A6F61EF),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          onPressed: () {
-                            print('IconButton pressed ...');
-                          },
+                          child: FlutterFlowIconButton(
+                            borderColor: Colors.transparent,
+                            borderRadius: 40,
+                            buttonSize: 44,
+                            icon: Icon(
+                              Icons.notifications_none_rounded,
+                              color: Color(0xFF15161E),
+                              size: 26,
+                            ),
+                            onPressed: () {
+                              print('Notification pressed...');
+                            },
+                          ),
                         ),
                       ),
                     ],
@@ -319,14 +387,17 @@ class _userHomePageState extends State<userHomePage> {
                 StickyHeader(
                   overlapHeaders: false,
                   header: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
                       color: Colors.white,
+                      borderRadius: BorderRadius.vertical(
+                        bottom: Radius.circular(24),
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Color(0x116F61EF),
                           blurRadius: 12,
-                          offset: Offset(0, 4),
+                          offset: Offset(0, 6),
                         ),
                       ],
                     ),
@@ -335,10 +406,21 @@ class _userHomePageState extends State<userHomePage> {
                         // Search Field
                         Expanded(
                           child: Container(
-                            height: 52,
+                            height: 50,
                             decoration: BoxDecoration(
-                              color: Color(0xFFF8F8F8),
-                              borderRadius: BorderRadius.circular(24),
+                              gradient: LinearGradient(
+                                colors: [Color(0xFFF8F8F8), Color(0xFFF1F4F8)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0x206F61EF),
+                                  blurRadius: 10,
+                                  offset: Offset(0, 3),
+                                ),
+                              ],
                             ),
                             child: TextField(
                               controller: _model.textController,
@@ -346,408 +428,295 @@ class _userHomePageState extends State<userHomePage> {
                               decoration: InputDecoration(
                                 prefixIcon: Icon(
                                   Icons.search_rounded,
-                                  color: Color(0xFF6F61EF),
-                                  size: 24,
+                                  color: Color.fromARGB(255, 164, 145, 240),
+                                  size: 22,
                                 ),
                                 hintText: 'Search for products...',
                                 hintStyle: FlutterFlowTheme.of(
                                   context,
                                 ).labelMedium.override(
                                   fontFamily: 'Outfit',
+                                  color: Color(0xFF9E9E9E),
                                   letterSpacing: 0.0,
                                 ),
                                 border: InputBorder.none,
                                 contentPadding: EdgeInsets.symmetric(
-                                  vertical: 16,
+                                  vertical: 14,
+                                  horizontal: 12,
                                 ),
                               ),
                               style: TextStyle(
-                                color: Color(0xFF223263),
-                                fontSize: 14,
+                                color: Color(0xFF15161E),
+                                fontSize: 15,
                                 fontWeight: FontWeight.w500,
                               ),
-                              cursorColor: Color(0xFF6F61EF),
+                              cursorColor: Color.fromARGB(255, 160, 140, 240),
                             ),
                           ),
                         ),
-
-                        SizedBox(width: 12),
                       ],
                     ),
                   ),
+
                   content: Column(
                     mainAxisSize: MainAxisSize.max,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(16, 12, 16, 0),
+                        padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
                         child: Container(
                           width: double.infinity,
                           height: 230,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
                             image: DecorationImage(
+                              image: AssetImage('assets/images/disc3.jpg'),
                               fit: BoxFit.cover,
-                              image: AssetImage('assets/images/discount2.jpg'),
                             ),
                             boxShadow: [
                               BoxShadow(
-                                blurRadius: 4,
-                                color: Color(0x250F1113),
-                                offset: Offset(0.0, 1),
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
                               ),
                             ],
-                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: Container(
-                            width: 100,
-                            height: 100,
                             decoration: BoxDecoration(
-                              color: Color(0x430F1113),
-                              borderRadius: BorderRadius.circular(12),
+                              color: Colors.black.withOpacity(0.4),
+                              borderRadius: BorderRadius.circular(20),
                             ),
-                            child: Padding(
-                              padding: EdgeInsetsDirectional.fromSTEB(
-                                12,
-                                12,
-                                12,
-                                0,
+                            padding: EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Special Sales Just for You!',
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                Text(
+                                  'Up to 50% off selected items.\nLimited time only!',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.white70,
+                                    height: 1.4,
+                                  ),
+                                ),
+                                Align(
+                                  alignment: Alignment.bottomRight,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      print('Shop Now clicked');
+                                    },
+                                    icon: Icon(
+                                      Icons.shopping_bag_rounded,
+                                      size: 18,
+                                    ),
+                                    label: Text(
+                                      'Shop Now',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Color.fromARGB(
+                                        255,
+                                        164,
+                                        145,
+                                        240,
+                                      ),
+                                      foregroundColor: Colors.white,
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 10,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(30),
+                                      ),
+                                      elevation: 4,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Recommended',
+                              style: TextStyle(
+                                fontFamily: 'Outfit',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF333B57),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {},
+                              child: Text(
+                                'See all',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF6F61EF),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Container(
+                        height: 260,
+                        child: ListView.separated(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          scrollDirection: Axis.horizontal,
+                          itemCount: 5,
+                          separatorBuilder:
+                              (context, index) => SizedBox(width: 16),
+                          itemBuilder: (context, index) {
+                            return Container(
+                              width: 160,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 10,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ],
                               ),
                               child: Column(
-                                mainAxisSize: MainAxisSize.max,
-                                mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Padding(
-                                    padding: EdgeInsetsDirectional.fromSTEB(
-                                      0,
-                                      0,
-                                      70,
-                                      0,
-                                    ),
-                                    child: Text(
-                                      'Gifting just got sweeter — special deals waiting for you!',
-                                      style: FlutterFlowTheme.of(
-                                        context,
-                                      ).headlineMedium.override(
-                                        fontFamily: 'Outfit',
-                                        color: Colors.white,
-                                        fontSize: 24,
-                                        letterSpacing: 0.0,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsetsDirectional.fromSTEB(
-                                      0,
-                                      16,
-                                      0,
-                                      0,
-                                    ),
-                                    child: Text(
-                                      'Give More, Spend Less',
-                                      style: FlutterFlowTheme.of(
-                                        context,
-                                      ).titleSmall.override(
-                                        fontFamily: 'Outfit',
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        letterSpacing: 0.0,
-                                        fontWeight: FontWeight.normal,
-                                      ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsetsDirectional.fromSTEB(
-                                      0,
-                                      8,
-                                      0,
-                                      0,
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.max,
-                                      children: [
-                                        // ... (keep all the existing user avatar images code) ...
-                                      ],
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsetsDirectional.fromSTEB(
-                                      0,
-                                      12,
-                                      0,
-                                      0,
-                                    ),
-                                    child: FFButtonWidget(
-                                      onPressed: () {
-                                        print('Button pressed ...');
-                                      },
-                                      text: 'Shop Now!',
-                                      options: FFButtonOptions(
-                                        width: double.infinity,
-                                        height: 44,
-                                        padding: EdgeInsetsDirectional.fromSTEB(
-                                          0,
-                                          0,
-                                          0,
-                                          0,
+                                  Stack(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.vertical(
+                                          top: Radius.circular(16),
                                         ),
-                                        iconPadding:
-                                            EdgeInsetsDirectional.fromSTEB(
-                                              0,
-                                              0,
-                                              0,
-                                              0,
+                                        child: Image.asset(
+                                          'assets/images/hand_watch.jpg',
+                                          height: 140,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 12,
+                                        left: 12,
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.redAccent,
+                                            borderRadius: BorderRadius.circular(
+                                              6,
                                             ),
-                                        color: Color.fromARGB(
-                                          255,
-                                          171,
-                                          158,
-                                          226,
-                                        ), // Changed to your desired color
-                                        textStyle: FlutterFlowTheme.of(
-                                          context,
-                                        ).titleSmall.override(
-                                          fontFamily: 'Outfit',
-                                          color:
-                                              Colors
-                                                  .white, // White text for contrast
-                                          fontSize: 16,
-                                          letterSpacing: 0.0,
-                                          fontWeight: FontWeight.normal,
+                                          ),
+                                          child: Text(
+                                            '40% OFF',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
                                         ),
-                                        elevation: 2,
-                                        borderSide: BorderSide(
-                                          color: Colors.transparent,
-                                          width: 1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
                                       ),
+                                      Positioned(
+                                        top: 12,
+                                        right: 12,
+                                        child: Icon(
+                                          Icons.favorite_border,
+                                          size: 20,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Summer Beach',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF333B57),
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        SizedBox(height: 6),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              '\$25.99',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF6F61EF),
+                                              ),
+                                            ),
+                                            SizedBox(width: 8),
+                                            Text(
+                                              '\$42.99',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                decoration:
+                                                    TextDecoration.lineThrough,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 10),
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: Container(
+                                            padding: EdgeInsets.all(6),
+                                            decoration: BoxDecoration(
+                                              color: Color(0xFF6F61EF),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Icon(
+                                              Icons.add,
+                                              size: 18,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
                       ),
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(16, 0, 0, 0),
-                        child: Text(
-                          'Top Beaches',
-                          style: FlutterFlowTheme.of(
-                            context,
-                          ).labelMedium.override(
-                            fontFamily: 'Outfit',
-                            color: Color(0xFF606A85),
-                            fontSize: 14,
-                            letterSpacing: 0.0,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 4),
-                        child: Container(
-                          width: double.infinity,
-                          height: 270,
-                          decoration: BoxDecoration(),
-                          child: ListView(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            scrollDirection: Axis.horizontal,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                child: Container(
-                                  width: 140, // Sleek smaller width
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(
-                                      6,
-                                    ), // Smaller border radius
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
-                                        blurRadius: 6,
-                                        offset: Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Image with padding and badges
-                                      Stack(
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.all(
-                                              4,
-                                            ), // Padding between image and border
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    8,
-                                                  ), // Smooth corners
-                                              child: Image.network(
-                                                'https://images.unsplash.com/photo-1519046904884-53103b34b206?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8YmVhY2h8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=80',
-                                                width: double.infinity,
-                                                height: 160, // Taller image
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (
-                                                  context,
-                                                  error,
-                                                  stackTrace,
-                                                ) {
-                                                  return Container(
-                                                    height: 140,
-                                                    color: Colors.grey[200],
-                                                    child: Icon(
-                                                      Icons.image,
-                                                      color: Colors.grey,
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                          // Discount Badge (red)
-                                          Positioned(
-                                            top: 16,
-                                            left: 16,
-                                            child: Container(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: 7,
-                                                vertical: 3,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: Color.fromARGB(
-                                                  255,
-                                                  239,
-                                                  66,
-                                                  54,
-                                                ), // Red color
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                              ),
-                                              child: Text(
-                                                '40% OFF',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          // Favorite Button
-                                          Positioned(
-                                            top: 16,
-                                            right: 16,
-                                            child: Container(
-                                              width: 32,
-                                              height: 32,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                shape: BoxShape.circle,
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withOpacity(0.1),
-                                                    blurRadius: 4,
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Icon(
-                                                Icons.favorite_border,
-                                                size: 18,
-                                                color: Colors.black54,
-                                              ),
-                                            ),
-                                          ),
-                                          // Quick Add Button
-                                          Positioned(
-                                            bottom: 16,
-                                            right: 16,
-                                            child: Container(
-                                              width: 28,
-                                              height: 28,
-                                              decoration: BoxDecoration(
-                                                color: Color(0xFF6F61EF),
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Icon(
-                                                Icons.add,
-                                                size: 18,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
 
-                                      // Product Details
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 4,
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            // Product Name
-                                            Text(
-                                              'Summer Beach',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.black87,
-                                              ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            SizedBox(height: 6),
-
-                                            // Price Row
-                                            Row(
-                                              children: [
-                                                Text(
-                                                  '\$25.99',
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xFF6F61EF),
-                                                  ),
-                                                ),
-                                                SizedBox(width: 6),
-                                                Text(
-                                                  '\$42.99',
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    decoration:
-                                                        TextDecoration
-                                                            .lineThrough,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 8),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ].divide(SizedBox(width: 16)),
-                          ),
-                        ),
-                      ),
                       Container(
                         width: double.infinity,
                         decoration: BoxDecoration(color: Color(0xFFF1F4F8)),
@@ -825,48 +794,16 @@ class _userHomePageState extends State<userHomePage> {
                                               if (firstIndex < products.length)
                                                 Expanded(
                                                   child: _buildSmallProductCard(
-                                                    imageUrl:
-                                                        products[firstIndex]
-                                                                .imageUrls
-                                                                .isNotEmpty
-                                                            ? products[firstIndex]
-                                                                .imageUrls[0]
-                                                            : 'https://via.placeholder.com/150',
-                                                    title:
-                                                        products[firstIndex]
-                                                            .name,
-                                                    price:
-                                                        '\$${products[firstIndex].price.toStringAsFixed(2)}',
-                                                    oldPrice:
-                                                        products[firstIndex]
-                                                                    .discountAmount !=
-                                                                null
-                                                            ? '\$${(products[firstIndex].price + products[firstIndex].discountAmount!).toStringAsFixed(2)}'
-                                                            : null,
+                                                    product:
+                                                        products[firstIndex],
                                                   ),
                                                 ),
                                               SizedBox(width: 8),
                                               if (secondIndex < products.length)
                                                 Expanded(
                                                   child: _buildSmallProductCard(
-                                                    imageUrl:
-                                                        products[secondIndex]
-                                                                .imageUrls
-                                                                .isNotEmpty
-                                                            ? products[secondIndex]
-                                                                .imageUrls[0]
-                                                            : 'https://via.placeholder.com/150',
-                                                    title:
-                                                        products[secondIndex]
-                                                            .name,
-                                                    price:
-                                                        '\$${products[secondIndex].price.toStringAsFixed(2)}',
-                                                    oldPrice:
-                                                        products[secondIndex]
-                                                                    .discountAmount !=
-                                                                null
-                                                            ? '\$${(products[secondIndex].price + products[secondIndex].discountAmount!).toStringAsFixed(2)}'
-                                                            : null,
+                                                    product:
+                                                        products[secondIndex],
                                                   ),
                                                 ),
                                             ],
@@ -944,14 +881,17 @@ class _userHomePageState extends State<userHomePage> {
                 }
               },
               type: BottomNavigationBarType.fixed,
-              selectedItemColor: Color(0xFF6F61EF),
+              selectedItemColor: Color.fromARGB(255, 164, 145, 240),
               unselectedItemColor: Colors.grey[600],
               selectedLabelStyle: FlutterFlowTheme.of(
                 context,
               ).titleSmall.override(
                 fontFamily: 'Outfit',
-                color: Color(
-                  0xFF6F61EF,
+                color: Color.fromARGB(
+                  255,
+                  164,
+                  145,
+                  240,
                 ), // Using your purple color for selected text
                 fontSize: 12, // Adjusted to match typical bottom nav text size
                 letterSpacing: 0.0,

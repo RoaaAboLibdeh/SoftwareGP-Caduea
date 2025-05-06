@@ -20,6 +20,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
 import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class CreateProductWidget extends StatefulWidget {
   final String ownerId;
@@ -36,7 +38,7 @@ class CreateProductWidget extends StatefulWidget {
 
 Future<List<Map<String, dynamic>>> fetchCategories() async {
   final response = await http.get(
-    Uri.parse('http://192.168.88.14:5000/api/categories'),
+    Uri.parse('http://192.168.88.100:5000/api/categories'),
   );
   if (response.statusCode == 200) {
     final data = json.decode(response.body);
@@ -51,7 +53,7 @@ Future<List<Map<String, dynamic>>> fetchCategories() async {
 
 Future<List<String>> fetchCategoryNames() async {
   final response = await http.get(
-    Uri.parse('http://192.168.88.14:5000/api/categories'),
+    Uri.parse('http://192.168.88.100:5000/api/categories'),
   );
   if (response.statusCode == 200) {
     final data = json.decode(response.body);
@@ -133,7 +135,7 @@ class _CreateProductWidgetState extends State<CreateProductWidget> {
       return;
     }
 
-    final uri = Uri.parse('http://192.168.88.14:5000/api/products/addproduct');
+    final uri = Uri.parse('http://192.168.88.100:5000/api/products/addproduct');
     final request = http.MultipartRequest('POST', uri);
 
     request.fields['name'] = _model.productNameTextController.text;

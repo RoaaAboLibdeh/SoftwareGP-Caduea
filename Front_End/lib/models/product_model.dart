@@ -8,6 +8,8 @@ class Product {
   final List<String> imageUrls;
   final List<String> recipientType;
   final List<String> occasion;
+  final int stock;
+  final bool isOnSale;
 
   Product({
     required this.id,
@@ -18,6 +20,8 @@ class Product {
     required this.imageUrls,
     required this.recipientType,
     required this.occasion,
+    required this.stock,
+    this.isOnSale = false,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -25,11 +29,16 @@ class Product {
       id: json['_id'] ?? json['productId'],
       name: json['name'],
       description: json['description'],
-      price: json['price'].toDouble(),
+      price: json['price']?.toDouble() ?? 0.0,
       discountAmount: json['discountAmount']?.toDouble(),
       imageUrls: List<String>.from(json['imageUrls'] ?? []),
       recipientType: List<String>.from(json['recipientType'] ?? []),
       occasion: List<String>.from(json['occasion'] ?? []),
+      stock: json['stock'] ?? 0,
+      isOnSale: json['isOnSale'] ?? false,
     );
   }
+
+  double get discountedPrice =>
+      discountAmount != null ? price - discountAmount! : price;
 }
