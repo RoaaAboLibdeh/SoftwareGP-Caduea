@@ -45,6 +45,28 @@ router.get('/popular', async (req, res) => {
   }
 });
 
+// routes/product.js
+router.get('/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    const regex = new RegExp(q, 'i');
+
+    const products = await Product.find({
+      $or: [
+        { keywords: regex },
+        { description: regex },
+        { name: regex },
+        { occasion: regex },
+        { recipientType: regex }
+      ]
+    }).populate('category');
+
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 
 
 

@@ -7,15 +7,13 @@ import '/custom/count_controller.dart';
 import '/custom/drop_down.dart';
 import '/custom/icon_button.dart';
 import '/custom/theme.dart';
-import '/custom/widgets.dart';
 import '/models/product_model.dart';
 import 'ProductDetailsForUser_model.dart';
 
 class ProductDetailsWidget extends StatefulWidget {
   final Product product;
 
-  const ProductDetailsWidget({Key? key, required this.product})
-    : super(key: key);
+  const ProductDetailsWidget({super.key, required this.product});
 
   @override
   State<ProductDetailsWidget> createState() => _ProductDetailsWidgetState();
@@ -30,6 +28,7 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
   void initState() {
     super.initState();
     _model = ProductDetailsModel();
+    _model.countControllerValue = 1;
   }
 
   @override
@@ -81,33 +80,27 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         FlutterFlowIconButton(
-                          borderColor: Colors.transparent,
-                          borderRadius: 30,
-                          borderWidth: 1,
                           buttonSize: 44,
-                          fillColor: Colors.black.withOpacity(0.3),
                           icon: Icon(
                             Icons.arrow_back_rounded,
                             color: Colors.white,
                           ),
+                          fillColor: Colors.black.withOpacity(0.3),
                           onPressed: () => Navigator.of(context).pop(),
                         ),
                         FlutterFlowIconButton(
-                          borderColor: Colors.transparent,
-                          borderRadius: 30,
-                          borderWidth: 1,
                           buttonSize: 44,
-                          fillColor: Colors.black.withOpacity(0.3),
                           icon: Icon(
                             Icons.shopping_cart_outlined,
                             color: Colors.white,
                           ),
+                          fillColor: Colors.black.withOpacity(0.3),
                           onPressed: () {},
                         ),
                       ],
                     ),
                   ),
-                  if (product.imageUrls.length > 1)
+                  if ((product.imageUrls?.length ?? 0) > 1)
                     Positioned(
                       bottom: 20,
                       left: 0,
@@ -115,7 +108,7 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                       child: Center(
                         child: SmoothPageIndicator(
                           controller: _imageController,
-                          count: product.imageUrls.length,
+                          count: product.imageUrls!.length,
                           effect: WormEffect(
                             dotHeight: 8,
                             dotWidth: 8,
@@ -135,6 +128,7 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // --- TITLE + PRICE ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +136,7 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                       Expanded(
                         child: Text(
                           product.name,
-                          style: theme.headlineMedium?.override(
+                          style: theme.headlineMedium?.copyWith(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
@@ -167,11 +161,11 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          if (product.isOnSale &&
+                          if (product.isOnSale == true &&
                               product.discountAmount != null)
                             Container(
-                              margin: EdgeInsets.only(top: 4),
-                              padding: EdgeInsets.symmetric(
+                              margin: const EdgeInsets.only(top: 4),
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
                                 vertical: 4,
                               ),
@@ -181,7 +175,7 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                               ),
                               child: Text(
                                 'Save \$${product.discountAmount!.toStringAsFixed(2)}',
-                                style: theme.bodySmall?.override(
+                                style: theme.bodySmall?.copyWith(
                                   color: Colors.red,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -191,19 +185,22 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 12),
+
+                  // --- TAGS ---
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      ...product.recipientType.map(
+                      ...?product.recipientType?.map(
                         (type) => Chip(
                           label: Text(type),
                           backgroundColor: theme.secondaryBackground,
                           labelStyle: theme.labelSmall,
                         ),
                       ),
-                      ...product.occasion.map(
+                      ...?product.occasion?.map(
                         (occ) => Chip(
                           label: Text(occ),
                           backgroundColor: theme.secondaryBackground,
@@ -212,26 +209,33 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 24),
+
+                  // --- DESCRIPTION ---
                   Text(
                     'Description',
-                    style: theme.titleMedium?.override(
+                    style: theme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(product.description, style: theme.bodyMedium),
+
                   const SizedBox(height: 24),
+
+                  // --- OPTIONS ---
                   Text(
                     'Options',
-                    style: theme.titleMedium?.override(
+                    style: theme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 16),
+
                   Text(
                     'Color',
-                    style: theme.bodyMedium?.override(
+                    style: theme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -244,24 +248,27 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                     options: const ['Black', 'White', 'Blue', 'Red', 'Green'],
                     onChanged:
                         (val) => setState(() => _model.dropDownValue1 = val),
+                    hintText: 'Select Color',
                     width: double.infinity,
                     height: 50,
                     textStyle: theme.bodyMedium,
-                    hintText: 'Select Color',
-                    icon: Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: theme.secondaryText,
-                    ),
                     fillColor: theme.secondaryBackground,
                     borderColor: theme.alternate,
                     borderWidth: 2,
                     borderRadius: 8,
-                    margin: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-                    elevation: 2, // Added this required parameter
+                    margin: const EdgeInsets.symmetric(horizontal: 12),
+                    elevation: 2,
                     hidesUnderline: true,
                   ),
 
-                  // Second dropdown (Size selection)
+                  const SizedBox(height: 12),
+                  Text(
+                    'Size',
+                    style: theme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   FlutterFlowDropDown<String>(
                     controller:
                         _model.dropDownValueController2 ??= FormFieldController(
@@ -270,26 +277,25 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                     options: const ['S', 'M', 'L', 'XL', 'XXL'],
                     onChanged:
                         (val) => setState(() => _model.dropDownValue2 = val),
+                    hintText: 'Select Size',
                     width: double.infinity,
                     height: 50,
                     textStyle: theme.bodyMedium,
-                    hintText: 'Select Size',
-                    icon: Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: theme.secondaryText,
-                    ),
                     fillColor: theme.secondaryBackground,
                     borderColor: theme.alternate,
                     borderWidth: 2,
                     borderRadius: 8,
-                    margin: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-                    elevation: 2, // Added this required parameter
+                    margin: const EdgeInsets.symmetric(horizontal: 12),
+                    elevation: 2,
                     hidesUnderline: true,
                   ),
+
                   const SizedBox(height: 24),
+
+                  // --- QUANTITY ---
                   Text(
                     'Quantity',
-                    style: theme.titleMedium?.override(
+                    style: theme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -300,77 +306,77 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: theme.alternate),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Quantity', style: theme.bodyMedium),
-                          FlutterFlowCountController(
-                            decrementIconBuilder:
-                                (enabled) => Icon(
-                                  Icons.remove,
-                                  color:
-                                      enabled
-                                          ? theme.primaryText
-                                          : theme.secondaryText,
-                                ),
-                            incrementIconBuilder:
-                                (enabled) => Icon(
-                                  Icons.add,
-                                  color:
-                                      enabled
-                                          ? theme.primaryText
-                                          : theme.secondaryText,
-                                ),
-                            countBuilder:
-                                (count) => Text(
-                                  count.toString(),
-                                  style: theme.bodyLarge,
-                                ),
-                            count: _model.countControllerValue,
-                            updateCount: (count) => _model.updateCount(count),
-                            stepSize: 1,
-                            minimum: 1,
-                            maximum: product.stock,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                            ),
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Quantity', style: theme.bodyMedium),
+                        FlutterFlowCountController(
+                          count: _model.countControllerValue,
+                          updateCount:
+                              (val) => setState(
+                                () => _model.countControllerValue = val,
+                              ),
+                          stepSize: 1,
+                          minimum: 1,
+                          maximum: product.stock,
+                          decrementIconBuilder:
+                              (enabled) => Icon(
+                                Icons.remove,
+                                color:
+                                    enabled
+                                        ? theme.primaryText
+                                        : theme.secondaryText,
+                              ),
+                          incrementIconBuilder:
+                              (enabled) => Icon(
+                                Icons.add,
+                                color:
+                                    enabled
+                                        ? theme.primaryText
+                                        : theme.secondaryText,
+                              ),
+                          countBuilder:
+                              (val) =>
+                                  Text(val.toString(), style: theme.bodyLarge),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
+
                   const SizedBox(height: 24),
+
+                  // --- STOCK INFO ---
                   Container(
                     decoration: BoxDecoration(
                       color: theme.secondaryBackground,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: theme.alternate),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.inventory_2_outlined,
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          color: product.stock > 0 ? Colors.green : Colors.red,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          product.stock > 0
+                              ? '${product.stock} available in stock'
+                              : 'Out of stock',
+                          style: theme.bodyMedium?.copyWith(
                             color:
                                 product.stock > 0 ? Colors.green : Colors.red,
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            product.stock > 0
-                                ? '${product.stock} available in stock'
-                                : 'Out of stock',
-                            style: theme.bodyMedium?.override(
-                              color:
-                                  product.stock > 0 ? Colors.green : Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
+
                   const SizedBox(height: 80),
                 ],
               ),
@@ -386,7 +392,7 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
               blurRadius: 10,
-              offset: const Offset(0, -5),
+              offset: Offset(0, -5),
             ),
           ],
         ),
@@ -394,11 +400,10 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
           style: ElevatedButton.styleFrom(
             backgroundColor: theme.primary,
             foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 50),
+            minimumSize: Size(double.infinity, 50),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            elevation: 0,
           ),
           onPressed:
               product.stock > 0
@@ -413,9 +418,9 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                   : null,
           child: Text(
             product.stock > 0
-                ? 'Add to Cart - \$${(product.discountedPrice * _model.countControllerValue).toStringAsFixed(2)}'
+                ? 'Add to Cart - \$${((product.discountedPrice ?? product.price ?? 0) * _model.countControllerValue).toStringAsFixed(2)}'
                 : 'Out of Stock',
-            style: theme.titleMedium?.override(
+            style: theme.titleMedium?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.bold,
             ),

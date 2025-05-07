@@ -2,8 +2,10 @@ import 'package:avatar_plus/avatar_plus.dart';
 import 'package:cadeau_project/avatar_chat_page/avatar_chat_page.dart';
 import 'package:cadeau_project/product/ProductDetailsForUser/ProductDetailsForUser.dart';
 import 'package:cadeau_project/products_with_discount/products_with_discount.dart';
+import 'package:cadeau_project/searchResults/searchResult.dart';
 import 'package:cadeau_project/userCart/userCart.dart';
 import 'package:cadeau_project/userHomePage/userHomePage_model.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '/custom/icon_button.dart';
 import '/custom/theme.dart';
 import '/custom/util.dart';
@@ -15,8 +17,6 @@ export 'userHomePage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '/Categories/ListCategories.dart';
-import '/custom/animations.dart';
-import '/custom/widgets.dart';
 import 'package:http/http.dart' as http;
 import '/models/product_model.dart';
 import '/services/product_service.dart';
@@ -327,7 +327,13 @@ class _userHomePageState extends State<userHomePage> {
             right: 8,
             child: InkWell(
               onTap: () {
-                print('Add ${product.name}');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (context) => ProductDetailsWidget(product: product),
+                  ),
+                );
               },
               child: CircleAvatar(
                 radius: 16,
@@ -339,6 +345,32 @@ class _userHomePageState extends State<userHomePage> {
         ],
       ),
     );
+  }
+
+  // Add this above your build method or inside your State class
+  void _performSearch(BuildContext context) async {
+    final query = _model.textController.text.trim();
+    if (query.isNotEmpty) {
+      final response = await http.get(
+        Uri.parse(
+          'http://192.168.88.100:5000/api/products/search?q=$query',
+        ), // Replace with real URL
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonData = json.decode(response.body);
+        final results = jsonData.map((e) => Product.fromJson(e)).toList();
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SearchResultPage(products: results),
+          ),
+        );
+      } else {
+        print("Search failed with status: ${response.statusCode}");
+      }
+    }
   }
 
   @override
@@ -478,6 +510,7 @@ class _userHomePageState extends State<userHomePage> {
                 ),
                 StickyHeader(
                   overlapHeaders: false,
+                  // Inside your widget
                   header: Container(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
@@ -517,6 +550,7 @@ class _userHomePageState extends State<userHomePage> {
                             child: TextField(
                               controller: _model.textController,
                               focusNode: _model.textFieldFocusNode,
+                              onSubmitted: (_) => _performSearch(context),
                               decoration: InputDecoration(
                                 prefixIcon: Icon(
                                   Icons.search_rounded,
@@ -544,6 +578,30 @@ class _userHomePageState extends State<userHomePage> {
                               ),
                               cursorColor: Color.fromARGB(255, 160, 140, 240),
                             ),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        // Search Button
+                        Container(
+                          height: 48,
+                          width: 48,
+                          decoration: BoxDecoration(
+                            color: Color.fromARGB(255, 164, 145, 240),
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0x306F61EF),
+                                blurRadius: 10,
+                                offset: Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                            ),
+                            onPressed: () => _performSearch(context),
                           ),
                         ),
                       ],
@@ -656,24 +714,23 @@ class _userHomePageState extends State<userHomePage> {
                           children: [
                             Text(
                               'Recommended',
-                              style: TextStyle(
-                                fontFamily: 'Outfit',
+                              style: GoogleFonts.poppins(
                                 fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF333B57),
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
                               ),
                             ),
-                            TextButton(
-                              onPressed: () {},
-                              child: Text(
-                                'See all',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF6F61EF),
-                                ),
-                              ),
-                            ),
+                            // TextButton(
+                            //   onPressed: () {},
+                            //   child: Text(
+                            //     'See all',
+                            //     style: TextStyle(
+                            //       fontSize: 12,
+                            //       fontWeight: FontWeight.w500,
+                            //       color: Color(0xFF6F61EF),
+                            //     ),
+                            //   ),
+                            // ),
                           ],
                         ),
                       ),
