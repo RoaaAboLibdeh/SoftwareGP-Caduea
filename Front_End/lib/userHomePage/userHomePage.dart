@@ -1,6 +1,7 @@
 import 'package:avatar_plus/avatar_plus.dart';
 import 'package:cadeau_project/avatar_chat_page/avatar_chat_page.dart';
 import 'package:cadeau_project/product/ProductDetailsForUser/ProductDetailsForUser.dart';
+import 'package:cadeau_project/products_with_discount/products_with_discount.dart';
 import 'package:cadeau_project/userCart/userCart.dart';
 import 'package:cadeau_project/userHomePage/userHomePage_model.dart';
 import '/custom/icon_button.dart';
@@ -175,7 +176,34 @@ class _userHomePageState extends State<userHomePage> {
     );
   }
 
-  Widget _buildSmallProductCard({required Product product}) {
+  Future<List<Product>> fetchTopPopularProducts() async {
+    final response = await http.get(
+      Uri.parse('http://192.168.88.100:5000/api/products/popular?limit=10'),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Product.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load popular products');
+    }
+  }
+
+  Widget _buildSmallProductCard({
+    required BuildContext context,
+    required Product product,
+  }) {
+    final bool hasDiscount =
+        product.isOnSale &&
+        product.discountAmount != null &&
+        product.discountAmount! > 0 &&
+        product.price > 0;
+
+    final int discountPercentage =
+        hasDiscount
+            ? ((product.discountAmount! / product.price) * 100).round()
+            : 0;
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -185,79 +213,130 @@ class _userHomePageState extends State<userHomePage> {
           ),
         );
       },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: Offset(0, 4),
+      child: Stack(
+        children: [
+          // Card UI
+          Container(
+            margin: EdgeInsets.symmetric(vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Product Image
-            ClipRRect(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              child: Image.network(
-                product.imageUrls.isNotEmpty
-                    ? product.imageUrls[0]
-                    : 'https://via.placeholder.com/150',
-                height: 160,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Product Name
-                  Text(
-                    product.name,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Product Image
+                ClipRRect(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                  child: Image.network(
+                    product.imageUrls.isNotEmpty
+                        ? product.imageUrls[0]
+                        : 'https://via.placeholder.com/150',
+                    height: 180,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
                   ),
-                  SizedBox(height: 6),
-                  // Prices
-                  Row(
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (product.isOnSale && product.discountAmount != null)
-                        Text(
-                          '\$${product.price.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                            decoration: TextDecoration.lineThrough,
-                          ),
-                        ),
-                      if (product.isOnSale) SizedBox(width: 6),
+                      // Product Name
                       Text(
-                        '\$${product.discountedPrice.toStringAsFixed(2)}',
+                        product.name,
                         style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green[700],
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Colors.black87,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                      SizedBox(height: 6),
+                      // Prices
+                      hasDiscount
+                          ? Row(
+                            children: [
+                              Text(
+                                '\$${product.price.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                '\$${product.discountedPrice.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green[700],
+                                ),
+                              ),
+                            ],
+                          )
+                          : Text(
+                            '\$${product.price.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
                     ],
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+
+          // Discount badge
+          if (hasDiscount)
+            Positioned(
+              top: 8,
+              left: 8,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '-$discountPercentage%',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
-          ],
-        ),
+
+          // Add icon button
+          Positioned(
+            top: 8,
+            right: 8,
+            child: InkWell(
+              onTap: () {
+                print('Add ${product.name}');
+              },
+              child: CircleAvatar(
+                radius: 16,
+                backgroundColor: Colors.black.withOpacity(0.7),
+                child: Icon(Icons.add, size: 18, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -525,7 +604,14 @@ class _userHomePageState extends State<userHomePage> {
                                   alignment: Alignment.bottomRight,
                                   child: ElevatedButton.icon(
                                     onPressed: () {
-                                      print('Shop Now clicked');
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) =>
+                                                  ProductsWithDiscountPage(), // from products_with_discount.dart
+                                        ),
+                                      );
                                     },
                                     icon: Icon(
                                       Icons.shopping_bag_rounded,
@@ -593,7 +679,7 @@ class _userHomePageState extends State<userHomePage> {
                       ),
                       SizedBox(height: 4),
                       FutureBuilder<List<Product>>(
-                        future: fetchDiscountedProducts(),
+                        future: fetchTopPopularProducts(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
@@ -605,13 +691,13 @@ class _userHomePageState extends State<userHomePage> {
                           } else if (!snapshot.hasData ||
                               snapshot.data!.isEmpty) {
                             return Center(
-                              child: Text('No discounted products'),
+                              child: Text('No recommended products found.'),
                             );
                           }
 
                           final products = snapshot.data!;
 
-                          return Container(
+                          return SizedBox(
                             height: 260,
                             child: ListView.separated(
                               padding: EdgeInsets.symmetric(horizontal: 16),
@@ -621,145 +707,11 @@ class _userHomePageState extends State<userHomePage> {
                                   (context, index) => SizedBox(width: 16),
                               itemBuilder: (context, index) {
                                 final product = products[index];
-                                return Container(
+                                return SizedBox(
                                   width: 160,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
-                                        blurRadius: 10,
-                                        offset: Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Stack(
-                                        children: [
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.vertical(
-                                              top: Radius.circular(16),
-                                            ),
-                                            child: Image.network(
-                                              product.imageUrls.isNotEmpty
-                                                  ? product.imageUrls[0]
-                                                  : '',
-                                              height: 140,
-                                              width: double.infinity,
-                                              fit: BoxFit.cover,
-                                              errorBuilder:
-                                                  (
-                                                    context,
-                                                    error,
-                                                    stackTrace,
-                                                  ) => Container(
-                                                    height: 140,
-                                                    color: Colors.grey.shade300,
-                                                    child: Icon(
-                                                      Icons.broken_image,
-                                                    ),
-                                                  ),
-                                            ),
-                                          ),
-                                          Positioned(
-                                            top: 12,
-                                            left: 12,
-                                            child: Container(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 4,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.redAccent,
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                              ),
-                                              child: Text(
-                                                '${(product?.discountAmount ?? 0).toInt()}% OFF',
-
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          Positioned(
-                                            top: 12,
-                                            right: 12,
-                                            child: Icon(
-                                              Icons.favorite_border,
-                                              size: 20,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(12.0),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              product.name,
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                                color: Color(0xFF333B57),
-                                              ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            SizedBox(height: 6),
-                                            Row(
-                                              children: [
-                                                Text(
-                                                  '\$${(product.price * (1 - product.discountAmount! / 100)).toStringAsFixed(2)}',
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xFF6F61EF),
-                                                  ),
-                                                ),
-                                                SizedBox(width: 8),
-                                                Text(
-                                                  '\$${product.price.toStringAsFixed(2)}',
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    decoration:
-                                                        TextDecoration
-                                                            .lineThrough,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 10),
-                                            Align(
-                                              alignment: Alignment.centerRight,
-                                              child: Container(
-                                                padding: EdgeInsets.all(6),
-                                                decoration: BoxDecoration(
-                                                  color: Color(0xFF6F61EF),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: Icon(
-                                                  Icons.add,
-                                                  size: 18,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                                  child: _buildSmallProductCard(
+                                    context: context,
+                                    product: product,
                                   ),
                                 );
                               },
@@ -770,7 +722,7 @@ class _userHomePageState extends State<userHomePage> {
 
                       Container(
                         width: double.infinity,
-                        decoration: BoxDecoration(color: Color(0xFFF1F4F8)),
+                        decoration: BoxDecoration(color: Colors.white),
                         child: Column(
                           mainAxisSize: MainAxisSize.max,
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -845,6 +797,7 @@ class _userHomePageState extends State<userHomePage> {
                                               if (firstIndex < products.length)
                                                 Expanded(
                                                   child: _buildSmallProductCard(
+                                                    context: context,
                                                     product:
                                                         products[firstIndex],
                                                   ),
@@ -853,6 +806,7 @@ class _userHomePageState extends State<userHomePage> {
                                               if (secondIndex < products.length)
                                                 Expanded(
                                                   child: _buildSmallProductCard(
+                                                    context: context,
                                                     product:
                                                         products[secondIndex],
                                                   ),

@@ -30,15 +30,21 @@ router.put('/:id/popularity', updatePopularity);
 router.delete('/:id', deleteProduct); // ✅ Already imported at the top
 
 // Route: GET /products/discounted
-router.get('/discounted', async (req, res) => {
+// GET /api/products/popular?limit=10
+router.get('/popular', async (req, res) => {
   try {
-    const discountedProducts = await Product.find({ discountAmount: { $gt: 0 } });
-    res.json(discountedProducts);
+    const limit = parseInt(req.query.limit) || 10;
+    const popularProducts = await Product.find({})
+      .sort({ popularity: -1 }) // Descending order
+      .limit(limit);
+
+    res.json(popularProducts);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 
 
