@@ -50,6 +50,21 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
     super.dispose();
   }
 
+  // Helper method for text style
+  TextStyle _textStyle(
+    BuildContext context, {
+    double? fontSize,
+    FontWeight? fontWeight,
+    Color? color,
+  }) {
+    return FlutterFlowTheme.of(context).headlineMedium.override(
+      fontFamily: 'Outfit',
+      fontSize: fontSize,
+      fontWeight: fontWeight ?? FontWeight.w600,
+      color: color,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
@@ -62,7 +77,7 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: mediaQuery.size.width,
+            expandedHeight: mediaQuery.size.width * 1.1,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
@@ -91,23 +106,24 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        FlutterFlowIconButton(
-                          buttonSize: 44,
-                          icon: Icon(
-                            Icons.arrow_back_rounded,
-                            color: Colors.white,
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.4),
+                            shape: BoxShape.circle,
                           ),
-                          fillColor: Colors.black.withOpacity(0.3),
-                          onPressed: () => Navigator.of(context).pop(),
                         ),
-                        FlutterFlowIconButton(
-                          buttonSize: 44,
-                          icon: Icon(
-                            Icons.shopping_cart_outlined,
-                            color: Colors.white,
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.4),
+                            shape: BoxShape.circle,
                           ),
-                          fillColor: Colors.black.withOpacity(0.3),
-                          onPressed: () {},
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.shopping_cart_outlined,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {},
+                          ),
                         ),
                       ],
                     ),
@@ -122,10 +138,11 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                           controller: _imageController,
                           count: product.imageUrls!.length,
                           effect: WormEffect(
-                            dotHeight: 8,
-                            dotWidth: 8,
                             activeDotColor: theme.primary,
                             dotColor: Colors.white.withOpacity(0.5),
+                            dotHeight: 8,
+                            dotWidth: 8,
+                            spacing: 10,
                           ),
                         ),
                       ),
@@ -136,7 +153,7 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -148,10 +165,8 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                       Expanded(
                         child: Text(
                           product.name,
-                          style: theme.headlineMedium?.copyWith(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: _textStyle(context, fontSize: 22),
+                          maxLines: 2,
                         ),
                       ),
                       Column(
@@ -161,17 +176,18 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                               product.discountAmount != null)
                             Text(
                               '\$${(product.price ?? 0).toStringAsFixed(2)}',
-                              style: theme.bodyMedium?.copyWith(
+                              style: _textStyle(context).copyWith(
                                 decoration: TextDecoration.lineThrough,
                                 color: Colors.grey,
+                                fontSize: 14,
                               ),
                             ),
                           Text(
                             '\$${(product.discountedPrice ?? product.price ?? 0).toStringAsFixed(2)}',
-                            style: theme.headlineSmall?.copyWith(
-                              color: theme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: _textStyle(
+                              context,
+                              fontSize: 18,
+                            ).copyWith(color: theme.primary),
                           ),
                           if (product.isOnSale == true &&
                               product.discountAmount != null)
@@ -187,10 +203,10 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                               ),
                               child: Text(
                                 'Save \$${product.discountAmount!.toStringAsFixed(2)}',
-                                style: theme.bodySmall?.copyWith(
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: _textStyle(
+                                  context,
+                                  fontSize: 10,
+                                ).copyWith(color: Colors.red),
                               ),
                             ),
                         ],
@@ -198,119 +214,43 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                     ],
                   ),
 
-                  const SizedBox(height: 12),
-
-                  // --- TAGS ---
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      ...?product.recipientType?.map(
-                        (type) => Chip(
-                          label: Text(type),
-                          backgroundColor: theme.secondaryBackground,
-                          labelStyle: theme.labelSmall,
-                        ),
-                      ),
-                      ...?product.occasion?.map(
-                        (occ) => Chip(
-                          label: Text(occ),
-                          backgroundColor: theme.secondaryBackground,
-                          labelStyle: theme.labelSmall,
-                        ),
-                      ),
-                    ],
-                  ),
+                  const SizedBox(height: 16),
 
                   const SizedBox(height: 24),
 
                   // --- DESCRIPTION ---
-                  Text(
-                    'Description',
-                    style: theme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text('Description', style: _textStyle(context, fontSize: 12)),
                   const SizedBox(height: 8),
-                  Text(product.description, style: theme.bodyMedium),
-
-                  const SizedBox(height: 24),
-
-                  // --- OPTIONS ---
-                  Text(
-                    'Options',
-                    style: theme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  Text(
-                    'Color',
-                    style: theme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  FlutterFlowDropDown<String>(
-                    controller:
-                        _model.dropDownValueController1 ??= FormFieldController(
-                          null,
+                  Container(
+                    padding: const EdgeInsets.all(
+                      16,
+                    ), // Add padding inside the box
+                    decoration: BoxDecoration(
+                      color: Colors.white, // Background color of the box
+                      borderRadius: BorderRadius.circular(
+                        12,
+                      ), // Rounded corners
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
                         ),
-                    options: const ['Black', 'White', 'Blue', 'Red', 'Green'],
-                    onChanged:
-                        (val) => setState(() => _model.dropDownValue1 = val),
-                    hintText: 'Select Color',
-                    width: double.infinity,
-                    height: 50,
-                    textStyle: theme.bodyMedium,
-                    fillColor: theme.secondaryBackground,
-                    borderColor: theme.alternate,
-                    borderWidth: 2,
-                    borderRadius: 8,
-                    margin: const EdgeInsets.symmetric(horizontal: 12),
-                    elevation: 2,
-                    hidesUnderline: true,
-                  ),
-
-                  const SizedBox(height: 12),
-                  Text(
-                    'Size',
-                    style: theme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  FlutterFlowDropDown<String>(
-                    controller:
-                        _model.dropDownValueController2 ??= FormFieldController(
-                          null,
-                        ),
-                    options: const ['S', 'M', 'L', 'XL', 'XXL'],
-                    onChanged:
-                        (val) => setState(() => _model.dropDownValue2 = val),
-                    hintText: 'Select Size',
-                    width: double.infinity,
-                    height: 50,
-                    textStyle: theme.bodyMedium,
-                    fillColor: theme.secondaryBackground,
-                    borderColor: theme.alternate,
-                    borderWidth: 2,
-                    borderRadius: 8,
-                    margin: const EdgeInsets.symmetric(horizontal: 12),
-                    elevation: 2,
-                    hidesUnderline: true,
+                    child: Text(
+                      product.description,
+                      style: _textStyle(
+                        context,
+                        fontSize: 10,
+                      ).copyWith(fontWeight: FontWeight.normal),
+                    ),
                   ),
 
                   const SizedBox(height: 24),
 
                   // --- QUANTITY ---
-                  Text(
-                    'Quantity',
-                    style: theme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text('Quantity', style: _textStyle(context, fontSize: 18)),
                   const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
@@ -322,7 +262,10 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Quantity', style: theme.bodyMedium),
+                        Text(
+                          'Quantity',
+                          style: _textStyle(context, fontSize: 14),
+                        ),
                         FlutterFlowCountController(
                           count: _model.countControllerValue,
                           updateCount:
@@ -349,8 +292,10 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                                         : theme.secondaryText,
                               ),
                           countBuilder:
-                              (val) =>
-                                  Text(val.toString(), style: theme.bodyLarge),
+                              (val) => Text(
+                                val.toString(),
+                                style: _textStyle(context, fontSize: 16),
+                              ),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
                           ),
@@ -374,13 +319,14 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                         Icon(
                           Icons.inventory_2_outlined,
                           color: product.stock > 0 ? Colors.green : Colors.red,
+                          size: 24,
                         ),
                         const SizedBox(width: 12),
                         Text(
                           product.stock > 0
                               ? '${product.stock} available in stock'
                               : 'Out of stock',
-                          style: theme.bodyMedium?.copyWith(
+                          style: _textStyle(context, fontSize: 14).copyWith(
                             color:
                                 product.stock > 0 ? Colors.green : Colors.red,
                           ),
@@ -389,209 +335,15 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                     ),
                   ),
 
-                  const SizedBox(height: 80),
+                  const SizedBox(height: 32),
 
-                  // --- REVIEWS ---
-                  if (_isLoadingReviews)
-                    const Center(child: CircularProgressIndicator()),
-                  if (!_isLoadingReviews && _reviews.isNotEmpty) ...[
-                    Text(
-                      'User Reviews',
-                      style: theme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(Icons.star, color: Colors.amber),
-                        const SizedBox(width: 4),
-                        Text(
-                          _averageRating.toStringAsFixed(1),
-                          style: theme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '(${_reviews.length} reviews)',
-                          style: theme.bodySmall,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    ..._reviews
-                        .map(
-                          (review) => Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: theme.secondaryBackground,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: theme.alternate),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    // 👇 Replace avatar with initials
-                                    CircleAvatar(
-                                      backgroundColor:
-                                          theme.primary, // Customize color
-                                      radius: 16,
-                                      child: Text(
-                                        review.nameInitial,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      review.userName,
-                                      style: theme.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    Text(
-                                      '${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}',
-                                      style: theme.bodySmall,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: List.generate(
-                                    5,
-                                    (index) => Icon(
-                                      index < review.rating
-                                          ? Icons.star
-                                          : Icons.star_border,
-                                      color: Colors.amber,
-                                      size: 20,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(review.comment, style: theme.bodyMedium),
-                              ],
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  ],
+                  // --- REVIEWS SECTION ---
+                  _buildReviewsSection(context),
+
                   const SizedBox(height: 24),
-                  Text(
-                    'Add Your Review',
-                    style: theme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
 
-                  // --- STAR RATING ---
-                  Row(
-                    children: List.generate(5, (index) {
-                      return IconButton(
-                        icon: Icon(
-                          index < _model.userRating
-                              ? Icons.star
-                              : Icons.star_border,
-                          color: Colors.amber,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _model.userRating = index + 1;
-                          });
-                        },
-                      );
-                    }),
-                  ),
-
-                  // --- COMMENT FIELD ---
-                  TextField(
-                    controller: _model.reviewController,
-                    decoration: InputDecoration(
-                      hintText: 'Write your comment here...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    maxLines: 3,
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // --- SUBMIT BUTTON ---
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onPressed: () async {
-                      final comment = _model.reviewController.text.trim();
-                      final rating = _model.userRating;
-
-                      if (comment.isEmpty || rating == 0) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please add a comment and rating'),
-                          ),
-                        );
-                        return;
-                      }
-
-                      try {
-                        final response = await http.post(
-                          Uri.parse('http://192.168.88.100:5000/api/reviews'),
-                          headers: {'Content-Type': 'application/json'},
-                          body: jsonEncode({
-                            'userId':
-                                widget
-                                    .userId, // ✅ the user ID passed to this widget
-                            'productId':
-                                widget.product.id, // ✅ the current product’s ID
-                            'rating': rating,
-                            'comment': comment,
-                          }),
-                        );
-
-                        if (response.statusCode == 201) {
-                          _model.reviewController.clear();
-                          _model.userRating = 0;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Review submitted successfully'),
-                            ),
-                          );
-                          _fetchReviews(); // reload reviews
-                        } else {
-                          print(
-                            'Error submitting review: ${response.statusCode}',
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Failed to submit review'),
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        print('Exception: $e');
-                      }
-                    },
-
-                    child: const Text('Submit Review'),
-                  ),
+                  // --- ADD REVIEW SECTION ---
+                  _buildAddReviewSection(context),
                 ],
               ),
             ),
@@ -605,8 +357,8 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: Offset(0, -5),
+              blurRadius: 16,
+              offset: const Offset(0, -5),
             ),
           ],
         ),
@@ -614,10 +366,11 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
           style: ElevatedButton.styleFrom(
             backgroundColor: theme.primary,
             foregroundColor: Colors.white,
-            minimumSize: Size(double.infinity, 50),
+            minimumSize: const Size(double.infinity, 56),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
+            elevation: 0,
           ),
           onPressed:
               product.stock > 0
@@ -634,19 +387,313 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
             product.stock > 0
                 ? 'Add to Cart - \$${((product.discountedPrice ?? product.price ?? 0) * _model.countControllerValue).toStringAsFixed(2)}'
                 : 'Out of Stock',
-            style: theme.titleMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            style: _textStyle(
+              context,
+              fontSize: 16,
+            ).copyWith(color: Colors.white),
           ),
         ),
       ),
     );
   }
 
+  Widget _buildOptionSection(
+    BuildContext context, {
+    required String title,
+    required List<String> options,
+    required FormFieldController<String?> controller,
+    required Function(String?) onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: _textStyle(context, fontSize: 14)),
+        const SizedBox(height: 8),
+        FlutterFlowDropDown<String>(
+          controller: controller ??= FormFieldController(null),
+          options: options,
+          onChanged: onChanged,
+          hintText: 'Select $title',
+          width: double.infinity,
+          height: 50,
+          textStyle: _textStyle(context, fontSize: 14),
+          fillColor: FlutterFlowTheme.of(context).secondaryBackground,
+          borderColor: FlutterFlowTheme.of(context).alternate,
+          borderWidth: 2,
+          borderRadius: 8,
+          margin: const EdgeInsets.symmetric(horizontal: 0),
+          elevation: 2,
+          hidesUnderline: true,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReviewsSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Customer Reviews', style: _textStyle(context, fontSize: 20)),
+        const SizedBox(height: 8),
+
+        if (_isLoadingReviews) const Center(child: CircularProgressIndicator()),
+
+        if (!_isLoadingReviews && _reviews.isNotEmpty) ...[
+          Row(
+            children: [
+              Icon(Icons.star, color: Colors.amber, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                _averageRating.toStringAsFixed(1),
+                style: _textStyle(context, fontSize: 18),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '(${_reviews.length} reviews)',
+                style: _textStyle(context, fontSize: 14),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ..._reviews
+              .map(
+                (review) => Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: FlutterFlowTheme.of(context).secondaryBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: _getInitialsColor(review.userName),
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              review.nameInitial,
+                              style: _textStyle(
+                                context,
+                                fontSize: 16,
+                              ).copyWith(color: Colors.white),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  review.userName,
+                                  style: _textStyle(context, fontSize: 14),
+                                ),
+                                Text(
+                                  '${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}',
+                                  style: _textStyle(
+                                    context,
+                                    fontSize: 12,
+                                  ).copyWith(color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: List.generate(
+                          5,
+                          (index) => Icon(
+                            index < review.rating
+                                ? Icons.star
+                                : Icons.star_border,
+                            color: Colors.amber,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        review.comment,
+                        style: _textStyle(
+                          context,
+                          fontSize: 14,
+                        ).copyWith(fontWeight: FontWeight.normal),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+              .toList(),
+        ] else if (!_isLoadingReviews) ...[
+          Text(
+            'No reviews yet',
+            style: _textStyle(
+              context,
+              fontSize: 14,
+            ).copyWith(color: Colors.grey),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildAddReviewSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Add Your Review', style: _textStyle(context, fontSize: 20)),
+        const SizedBox(height: 16),
+
+        Text('Your Rating', style: _textStyle(context, fontSize: 14)),
+        const SizedBox(height: 8),
+
+        Row(
+          children: List.generate(5, (index) {
+            return IconButton(
+              icon: Icon(
+                index < _model.userRating ? Icons.star : Icons.star_border,
+                color: Colors.amber,
+                size: 32,
+              ),
+              onPressed: () {
+                setState(() {
+                  _model.userRating = index + 1;
+                });
+              },
+            );
+          }),
+        ),
+
+        const SizedBox(height: 16),
+
+        Text('Your Review', style: _textStyle(context, fontSize: 14)),
+        const SizedBox(height: 8),
+
+        TextField(
+          controller: _model.reviewController,
+          decoration: InputDecoration(
+            hintText: 'Share your experience with this product...',
+            hintStyle: _textStyle(
+              context,
+              fontSize: 14,
+            ).copyWith(color: Colors.grey, fontWeight: FontWeight.normal),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: FlutterFlowTheme.of(context).alternate,
+              ),
+            ),
+            filled: true,
+            fillColor: FlutterFlowTheme.of(context).secondaryBackground,
+            contentPadding: const EdgeInsets.all(16),
+          ),
+          maxLines: 4,
+          style: _textStyle(
+            context,
+            fontSize: 14,
+          ).copyWith(fontWeight: FontWeight.normal),
+        ),
+
+        const SizedBox(height: 16),
+
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: FlutterFlowTheme.of(context).primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            onPressed: () async {
+              final comment = _model.reviewController.text.trim();
+              final rating = _model.userRating;
+
+              if (comment.isEmpty || rating == 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please add a comment and rating'),
+                  ),
+                );
+                return;
+              }
+
+              try {
+                final response = await http.post(
+                  Uri.parse('http://192.168.88.100:5000/api/reviews'),
+                  headers: {'Content-Type': 'application/json'},
+                  body: jsonEncode({
+                    'userId': widget.userId,
+                    'productId': widget.product.id,
+                    'rating': rating,
+                    'comment': comment,
+                  }),
+                );
+
+                if (response.statusCode == 201) {
+                  _model.reviewController.clear();
+                  _model.userRating = 0;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Review submitted successfully'),
+                    ),
+                  );
+                  _fetchReviews();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Failed to submit review')),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: ${e.toString()}')),
+                );
+              }
+            },
+            child: Text(
+              'Submit Review',
+              style: _textStyle(
+                context,
+                fontSize: 16,
+              ).copyWith(color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Color _getInitialsColor(String userName) {
+    final colors = [
+      const Color(0xFF4285F4), // Blue
+      const Color(0xFF34A853), // Green
+      const Color(0xFFEA4335), // Red
+      const Color(0xFFFBBC05), // Yellow
+      const Color(0xFF673AB7), // Purple
+    ];
+    return colors[userName.hashCode % colors.length];
+  }
+
   Future<void> _fetchReviews() async {
     setState(() {
-      _isLoadingReviews = true; // 👈 Start loading
+      _isLoadingReviews = true;
     });
 
     try {
@@ -659,46 +706,38 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
         final List<dynamic> reviewsJson = decoded['data'];
-
-        // ✅ SAFELY handle averageRating from API
         final dynamic averageRatingFromApi = decoded['averageRating'];
         double averageRating = 0.0;
 
         if (averageRatingFromApi is int) {
-          averageRating = averageRatingFromApi.toDouble(); // 👈 fix type error
+          averageRating = averageRatingFromApi.toDouble();
         } else if (averageRatingFromApi is double) {
           averageRating = averageRatingFromApi;
         }
 
         setState(() {
           _reviews = reviewsJson.map((json) => Review.fromJson(json)).toList();
-          _averageRating = _calculateAverageRating(
-            _reviews,
-          ); // ✅ Use backend-calculated average
+          _averageRating = _calculateAverageRating(_reviews);
           _isLoadingReviews = false;
         });
       } else {
         setState(() {
           _isLoadingReviews = false;
         });
-        print('Failed to fetch reviews: ${response.statusCode}');
       }
     } catch (e) {
       setState(() {
         _isLoadingReviews = false;
       });
-      print('Error fetching reviews: $e');
     }
   }
 
   double _calculateAverageRating(List<Review> reviews) {
     if (reviews.isEmpty) return 0.0;
-
     double total = 0.0;
     for (var review in reviews) {
-      total += review.rating.toDouble(); // 👈 Cast to double
+      total += review.rating.toDouble();
     }
-
     return total / reviews.length;
   }
 }
