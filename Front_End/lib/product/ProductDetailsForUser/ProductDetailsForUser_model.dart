@@ -8,6 +8,8 @@ class ProductDetailsModel extends ChangeNotifier {
   String? dropDownValue2;
   FormFieldController<String>? dropDownValueController1;
   FormFieldController<String>? dropDownValueController2;
+  final TextEditingController reviewController = TextEditingController();
+  int userRating = 0;
 
   void updateCount(int newValue) {
     countControllerValue = newValue;
@@ -18,6 +20,7 @@ class ProductDetailsModel extends ChangeNotifier {
   void dispose() {
     dropDownValueController1?.dispose();
     dropDownValueController2?.dispose();
+    reviewController.dispose();
     super.dispose();
   }
 }

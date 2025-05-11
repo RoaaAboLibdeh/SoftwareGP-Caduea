@@ -136,6 +136,15 @@ productSchema.statics.recommendGifts = async function(filters = {}) {
   ]);
 };
 
+productSchema.virtual('reviews', {
+  ref: 'Review',
+  localField: '_id',
+  foreignField: 'product'
+});
+productSchema.set('toObject', { virtuals: true });
+productSchema.set('toJSON', { virtuals: true });
+
+
 const Product = mongoose.model('Product', productSchema);
 
 module.exports = Product;

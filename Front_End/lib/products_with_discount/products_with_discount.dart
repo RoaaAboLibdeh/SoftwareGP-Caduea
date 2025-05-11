@@ -4,6 +4,10 @@ import 'package:cadeau_project/services/product_service.dart';
 import 'package:flutter/material.dart';
 
 class ProductsWithDiscountPage extends StatelessWidget {
+  final String userId; // Add userId as a parameter
+
+  ProductsWithDiscountPage({required this.userId});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,7 +93,11 @@ class ProductsWithDiscountPage extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ProductDetailsWidget(product: product),
+            builder:
+                (context) => ProductDetailsWidget(
+                  product: product,
+                  userId: userId, // Pass 'userId' correctly
+                ),
           ),
         );
       },

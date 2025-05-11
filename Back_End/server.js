@@ -49,3 +49,9 @@ app.use('/products', productRoutes);
 app.listen(3000, () => {
   console.log('Server running on port 5000');
 });
+
+
+const reviewRoutes = require('./routes/ReviewRoutes');
+
+app.use(express.json());
+app.use('/api/reviews', reviewRoutes);

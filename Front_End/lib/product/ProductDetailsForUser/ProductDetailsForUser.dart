@@ -1,6 +1,7 @@
 // lib/pages/ProductDetailsForUser.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cadeau_project/custom/form_field_controller.dart';
+import 'package:cadeau_project/models/review_model.dart';
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '/custom/count_controller.dart';
@@ -9,11 +10,18 @@ import '/custom/icon_button.dart';
 import '/custom/theme.dart';
 import '/models/product_model.dart';
 import 'ProductDetailsForUser_model.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class ProductDetailsWidget extends StatefulWidget {
   final Product product;
+  final String userId;
 
-  const ProductDetailsWidget({super.key, required this.product});
+  const ProductDetailsWidget({
+    super.key,
+    required this.product,
+    required this.userId,
+  });
 
   @override
   State<ProductDetailsWidget> createState() => _ProductDetailsWidgetState();
@@ -23,12 +31,16 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
   late ProductDetailsModel _model;
   final PageController _imageController = PageController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  List<Review> _reviews = [];
+  double _averageRating = 0.0;
+  bool _isLoadingReviews = false;
 
   @override
   void initState() {
     super.initState();
     _model = ProductDetailsModel();
     _model.countControllerValue = 1;
+    _fetchReviews();
   }
 
   @override
@@ -378,6 +390,208 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                   ),
 
                   const SizedBox(height: 80),
+
+                  // --- REVIEWS ---
+                  if (_isLoadingReviews)
+                    const Center(child: CircularProgressIndicator()),
+                  if (!_isLoadingReviews && _reviews.isNotEmpty) ...[
+                    Text(
+                      'User Reviews',
+                      style: theme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.star, color: Colors.amber),
+                        const SizedBox(width: 4),
+                        Text(
+                          _averageRating.toStringAsFixed(1),
+                          style: theme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '(${_reviews.length} reviews)',
+                          style: theme.bodySmall,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ..._reviews
+                        .map(
+                          (review) => Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: theme.secondaryBackground,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: theme.alternate),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    // 👇 Replace avatar with initials
+                                    CircleAvatar(
+                                      backgroundColor:
+                                          theme.primary, // Customize color
+                                      radius: 16,
+                                      child: Text(
+                                        review.nameInitial,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      review.userName,
+                                      style: theme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Text(
+                                      '${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}',
+                                      style: theme.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: List.generate(
+                                    5,
+                                    (index) => Icon(
+                                      index < review.rating
+                                          ? Icons.star
+                                          : Icons.star_border,
+                                      color: Colors.amber,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(review.comment, style: theme.bodyMedium),
+                              ],
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ],
+                  const SizedBox(height: 24),
+                  Text(
+                    'Add Your Review',
+                    style: theme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // --- STAR RATING ---
+                  Row(
+                    children: List.generate(5, (index) {
+                      return IconButton(
+                        icon: Icon(
+                          index < _model.userRating
+                              ? Icons.star
+                              : Icons.star_border,
+                          color: Colors.amber,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _model.userRating = index + 1;
+                          });
+                        },
+                      );
+                    }),
+                  ),
+
+                  // --- COMMENT FIELD ---
+                  TextField(
+                    controller: _model.reviewController,
+                    decoration: InputDecoration(
+                      hintText: 'Write your comment here...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    maxLines: 3,
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // --- SUBMIT BUTTON ---
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () async {
+                      final comment = _model.reviewController.text.trim();
+                      final rating = _model.userRating;
+
+                      if (comment.isEmpty || rating == 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please add a comment and rating'),
+                          ),
+                        );
+                        return;
+                      }
+
+                      try {
+                        final response = await http.post(
+                          Uri.parse('http://192.168.88.100:5000/api/reviews'),
+                          headers: {'Content-Type': 'application/json'},
+                          body: jsonEncode({
+                            'userId':
+                                widget
+                                    .userId, // ✅ the user ID passed to this widget
+                            'productId':
+                                widget.product.id, // ✅ the current product’s ID
+                            'rating': rating,
+                            'comment': comment,
+                          }),
+                        );
+
+                        if (response.statusCode == 201) {
+                          _model.reviewController.clear();
+                          _model.userRating = 0;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Review submitted successfully'),
+                            ),
+                          );
+                          _fetchReviews(); // reload reviews
+                        } else {
+                          print(
+                            'Error submitting review: ${response.statusCode}',
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Failed to submit review'),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        print('Exception: $e');
+                      }
+                    },
+
+                    child: const Text('Submit Review'),
+                  ),
                 ],
               ),
             ),
@@ -428,5 +642,63 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
         ),
       ),
     );
+  }
+
+  Future<void> _fetchReviews() async {
+    setState(() {
+      _isLoadingReviews = true; // 👈 Start loading
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'http://192.168.88.100:5000/api/reviews/products/${widget.product.id}',
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        final List<dynamic> reviewsJson = decoded['data'];
+
+        // ✅ SAFELY handle averageRating from API
+        final dynamic averageRatingFromApi = decoded['averageRating'];
+        double averageRating = 0.0;
+
+        if (averageRatingFromApi is int) {
+          averageRating = averageRatingFromApi.toDouble(); // 👈 fix type error
+        } else if (averageRatingFromApi is double) {
+          averageRating = averageRatingFromApi;
+        }
+
+        setState(() {
+          _reviews = reviewsJson.map((json) => Review.fromJson(json)).toList();
+          _averageRating = _calculateAverageRating(
+            _reviews,
+          ); // ✅ Use backend-calculated average
+          _isLoadingReviews = false;
+        });
+      } else {
+        setState(() {
+          _isLoadingReviews = false;
+        });
+        print('Failed to fetch reviews: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingReviews = false;
+      });
+      print('Error fetching reviews: $e');
+    }
+  }
+
+  double _calculateAverageRating(List<Review> reviews) {
+    if (reviews.isEmpty) return 0.0;
+
+    double total = 0.0;
+    for (var review in reviews) {
+      total += review.rating.toDouble(); // 👈 Cast to double
+    }
+
+    return total / reviews.length;
   }
 }

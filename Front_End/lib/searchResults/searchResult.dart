@@ -5,8 +5,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 class SearchResultPage extends StatelessWidget {
   final List<Product> products;
+  final String userId; // Add userId as a parameter
 
-  const SearchResultPage({Key? key, required this.products}) : super(key: key);
+  const SearchResultPage({
+    Key? key,
+    required this.products,
+    required this.userId,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +88,11 @@ class SearchResultPage extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ProductDetailsWidget(product: product),
+            builder:
+                (context) => ProductDetailsWidget(
+                  product: product,
+                  userId: userId, // Pass 'userId' correctly
+                ),
           ),
         );
       },

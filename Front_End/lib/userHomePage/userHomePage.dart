@@ -207,7 +207,11 @@ class _userHomePageState extends State<userHomePage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ProductDetailsWidget(product: product),
+            builder:
+                (context) => ProductDetailsWidget(
+                  product: product,
+                  userId: widget.userId,
+                ),
           ),
         );
       },
@@ -329,7 +333,10 @@ class _userHomePageState extends State<userHomePage> {
                   context,
                   MaterialPageRoute(
                     builder:
-                        (context) => ProductDetailsWidget(product: product),
+                        (context) => ProductDetailsWidget(
+                          product: product,
+                          userId: widget.userId,
+                        ),
                   ),
                 );
               },
@@ -362,7 +369,9 @@ class _userHomePageState extends State<userHomePage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => SearchResultPage(products: results),
+            builder:
+                (context) =>
+                    SearchResultPage(products: results, userId: widget.userId),
           ),
         );
       } else {
@@ -665,7 +674,9 @@ class _userHomePageState extends State<userHomePage> {
                                         MaterialPageRoute(
                                           builder:
                                               (context) =>
-                                                  ProductsWithDiscountPage(), // from products_with_discount.dart
+                                                  ProductsWithDiscountPage(
+                                                    userId: widget.userId,
+                                                  ),
                                         ),
                                       );
                                     },
