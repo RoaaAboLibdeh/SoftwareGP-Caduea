@@ -40,7 +40,7 @@ app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
 
 // Middleware
-app.use(express.json());
+// app.use(express.json());
 
 // Register route
 app.use('/products', productRoutes);
@@ -53,5 +53,6 @@ app.listen(3000, () => {
 
 const reviewRoutes = require('./routes/ReviewRoutes');
 
-app.use(express.json());
+// app.use(express.json());
 app.use('/api/reviews', reviewRoutes);
+

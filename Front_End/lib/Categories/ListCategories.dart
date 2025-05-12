@@ -7,7 +7,7 @@ import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class CategoriesPage extends StatefulWidget {
-  final String userId; // Add userId parameter
+  final String userId;
 
   const CategoriesPage({Key? key, required this.userId}) : super(key: key);
 
@@ -21,39 +21,70 @@ class _CategoriesPageState extends State<CategoriesPage> {
   String errorMessage = '';
   int _currentIndex = 1;
 
-  // Bottom Navigation Items (like SHEIN)
   final List<BottomNavigationBarItem> _bottomNavItems = [
     BottomNavigationBarItem(
-      icon: Icon(Icons.home_outlined),
-      activeIcon: Icon(
-        Icons.home,
-        color: Color.fromARGB(255, 164, 145, 240),
-      ), // Active icon color
+      icon: Container(
+        padding: EdgeInsets.all(6),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+        child: Icon(Icons.home_outlined, size: 24),
+      ),
+      activeIcon: Container(
+        padding: EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Color(0xFF6F61EF).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(Icons.home, color: Color(0xFF6F61EF), size: 24),
+      ),
       label: 'Home',
     ),
     BottomNavigationBarItem(
-      icon: Icon(Icons.category_outlined),
-      activeIcon: Icon(
-        Icons.category,
-        color: Color.fromARGB(255, 164, 145, 240),
-      ), // Active icon color
+      icon: Container(
+        padding: EdgeInsets.all(6),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+        child: Icon(Icons.category_outlined, size: 24),
+      ),
+      activeIcon: Container(
+        padding: EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Color(0xFF6F61EF).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(Icons.category, color: Color(0xFF6F61EF), size: 24),
+      ),
       label: 'Categories',
     ),
     BottomNavigationBarItem(
-      icon: Icon(Icons.shopping_cart_outlined),
-      activeIcon: Icon(
-        Icons.shopping_cart,
-        color: Color.fromARGB(255, 164, 145, 240),
-      ), // Active icon color
+      icon: Container(
+        padding: EdgeInsets.all(6),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+        child: Icon(Icons.shopping_cart_outlined, size: 24),
+      ),
+      activeIcon: Container(
+        padding: EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Color(0xFF6F61EF).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(Icons.shopping_cart, color: Color(0xFF6F61EF), size: 24),
+      ),
       label: 'Cart',
     ),
     BottomNavigationBarItem(
-      icon: Icon(Icons.person_outlined),
-      activeIcon: Icon(
-        Icons.person,
-        color: Color.fromARGB(255, 164, 145, 240),
-      ), // Active icon color
-      label: 'Me',
+      icon: Container(
+        padding: EdgeInsets.all(6),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+        child: Icon(Icons.person_outlined, size: 24),
+      ),
+      activeIcon: Container(
+        padding: EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Color(0xFF6F61EF).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(Icons.person, color: Color(0xFF6F61EF), size: 24),
+      ),
+      label: 'Profile',
     ),
   ];
 
@@ -94,7 +125,6 @@ class _CategoriesPageState extends State<CategoriesPage> {
   }
 
   IconData _getIconFromString(String iconName) {
-    // Maps icon string names to actual Material icons
     switch (iconName.toLowerCase()) {
       case 'electrical_services':
         return Icons.electrical_services;
@@ -120,67 +150,79 @@ class _CategoriesPageState extends State<CategoriesPage> {
   }
 
   String _getFallbackImageUrl(String categoryName) {
-    // Default images when none is provided in the database
-    return 'https://via.placeholder.com/300?text=${Uri.encodeComponent(categoryName)}';
+    return 'https://placehold.co/300x300/EEE/6F61EF?text=${Uri.encodeComponent(categoryName)}';
+  }
+
+  String _getCategoryImageUrl(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) {
+      return _getFallbackImageUrl('Category');
+    }
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    // Handle cases where imagePath might already contain part of the URL
+    if (imagePath.startsWith('/uploads/')) {
+      return 'http://192.168.88.100:5000$imagePath';
+    }
+
+    // Default case - construct the URL properly
+    return 'http://192.168.88.100:5000/uploads/${imagePath.replaceFirst('/uploads/', '')}';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Categories',
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
-            fontSize: 20,
+            fontSize: 24,
           ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back_rounded, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search, color: Colors.black),
+            icon: Icon(Icons.search_rounded, color: Colors.black),
             onPressed: () => _showSearchDialog(context),
           ),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: _fetchCategories,
+        color: Color(0xFF6F61EF),
         child: _buildContent(),
       ),
-      // 👇 SHEIN-like Bottom Navigation Bar
-      // Bottom Navigation Bar implementation
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 1,
-              blurRadius: 8,
-              offset: Offset(0, -3),
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 0,
+              blurRadius: 10,
+              offset: Offset(0, -5),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           child: BottomNavigationBar(
             currentIndex: _currentIndex,
             onTap: (index) {
-              if (index == _currentIndex)
-                return; // 👈 Prevents duplicate pushes
+              if (index == _currentIndex) return;
 
               setState(() => _currentIndex = index);
 
               if (index == 0) {
                 Navigator.pushReplacement(
-                  // 👈 Use pushReplacement to avoid stack buildup
                   context,
                   MaterialPageRoute(
                     builder: (context) => userHomePage(userId: widget.userId),
@@ -205,31 +247,19 @@ class _CategoriesPageState extends State<CategoriesPage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => CartWidget(userId: widget.userId),
-                  ), // 👈 Changed to ProfilePage (assuming "Me" is a profile)
+                  ),
                 );
               }
             },
             type: BottomNavigationBarType.fixed,
             selectedItemColor: Color(0xFF6F61EF),
             unselectedItemColor: Colors.grey[600],
-            selectedLabelStyle: FlutterFlowTheme.of(
-              context,
-            ).titleSmall.override(
-              fontFamily: 'Outfit',
-              color: Color(
-                0xFF6F61EF,
-              ), // Using your purple color for selected text
-              fontSize: 12, // Adjusted to match typical bottom nav text size
-              letterSpacing: 0.0,
-              fontWeight: FontWeight.w600, // Slightly bolder for selected
-            ),
-            unselectedLabelStyle: FlutterFlowTheme.of(
-              context,
-            ).titleSmall.override(
-              fontFamily: 'Outfit',
-              color: Colors.grey[600],
+            selectedLabelStyle: TextStyle(
               fontSize: 12,
-              letterSpacing: 0.0,
+              fontWeight: FontWeight.w600,
+            ),
+            unselectedLabelStyle: TextStyle(
+              fontSize: 12,
               fontWeight: FontWeight.normal,
             ),
             backgroundColor: Colors.white,
@@ -243,84 +273,94 @@ class _CategoriesPageState extends State<CategoriesPage> {
     );
   }
 
-  void _showSearchDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Search Categories'),
-            content: TextField(
-              decoration: const InputDecoration(
-                hintText: 'Enter category name',
-              ),
-              onChanged: (value) {
-                // Implement search functionality
-              },
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  // Implement search
-                  Navigator.pop(context);
-                },
-                child: const Text('Search'),
-              ),
-            ],
-          ),
-    );
-  }
-
   Widget _buildContent() {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (errorMessage.isNotEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(errorMessage),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _fetchCategories,
-              child: const Text('Retry'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6F61EF),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+            CircularProgressIndicator(color: Color(0xFF6F61EF)),
+            SizedBox(height: 16),
+            Text(
+              'Loading categories...',
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
             ),
           ],
         ),
       );
     }
 
+    if (errorMessage.isNotEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                color: Colors.red[400],
+                size: 48,
+              ),
+              SizedBox(height: 16),
+              Text(
+                errorMessage,
+                style: TextStyle(fontSize: 16, color: Colors.grey[800]),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _fetchCategories,
+                child: Text(
+                  'Try Again',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF6F61EF),
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (categories.isEmpty) {
-      return const Center(
-        child: Text('No categories available', style: TextStyle(fontSize: 16)),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.category_outlined, color: Colors.grey[400], size: 64),
+            SizedBox(height: 16),
+            Text(
+              'No categories available',
+              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+            ),
+          ],
+        ),
       );
     }
 
     return GridView.builder(
       padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 0.85,
+        childAspectRatio: 0.9,
       ),
       itemCount: categories.length,
       itemBuilder: (context, index) {
         final category = categories[index];
         final name = category['name'] ?? 'Unnamed Category';
         final icon = category['icon'] ?? 'category';
-        final imageUrl = category['image'] ?? _getFallbackImageUrl(name);
+        final imagePath = category['image'];
+        final imageUrl = _getCategoryImageUrl(imagePath);
 
         return _buildCategoryCard(name, icon, imageUrl);
       },
@@ -328,76 +368,105 @@ class _CategoriesPageState extends State<CategoriesPage> {
   }
 
   Widget _buildCategoryCard(String name, String icon, String imageUrl) {
-    return GestureDetector(
-      onTap: () => _navigateToCategoryProducts(context, name),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 1,
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
-                child: CachedNetworkImage(
-                  imageUrl: imageUrl,
-                  fit: BoxFit.cover,
-                  placeholder:
-                      (context, url) => Container(
-                        color: Colors.grey[200],
-                        child: Center(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => _navigateToCategoryProducts(context, name),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                  child: Stack(
+                    children: [
+                      CachedNetworkImage(
+                        imageUrl: imageUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        placeholder:
+                            (context, url) => Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFF6F61EF),
+                              ),
+                            ),
+                        errorWidget: (context, url, error) {
+                          debugPrint('Image load error: $error for URL: $url');
+                          return Container(
+                            color: Colors.grey[200],
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.image_not_supported_outlined,
+                                    color: Colors.grey[400],
+                                    size: 48,
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Image not available',
+                                    style: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            shape: BoxShape.circle,
+                          ),
                           child: Icon(
                             _getIconFromString(icon),
-                            color: const Color.fromARGB(255, 164, 145, 240),
-                            size: 40,
+                            color: Color(0xFF6F61EF),
+                            size: 20,
                           ),
                         ),
                       ),
-                  errorWidget:
-                      (context, url, error) => Container(
-                        color: Colors.grey[200],
-                        child: const Icon(Icons.error),
-                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Icon(
-                    _getIconFromString(icon),
-                    color: const Color.fromARGB(255, 164, 145, 240),
-                    size: 24,
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  name,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.grey[800],
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -409,6 +478,91 @@ class _CategoriesPageState extends State<CategoriesPage> {
       MaterialPageRoute(
         builder: (context) => CategoryProductsPage(category: categoryName),
       ),
+    );
+  }
+
+  void _showSearchDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Search Categories',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 16),
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Enter category name...',
+                      prefixIcon: Icon(Icons.search_rounded),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                    ),
+                    onChanged: (value) {
+                      // Implement search functionality
+                    },
+                  ),
+                  SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Implement search
+                          Navigator.pop(context);
+                        },
+                        child: Text('Search'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF6F61EF),
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
     );
   }
 }
@@ -423,14 +577,33 @@ class CategoryProductsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(category),
+        title: Text(
+          category,
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Center(
-        child: Text(
-          'Products in $category category',
-          style: const TextStyle(fontSize: 18),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.category_rounded,
+              size: 64,
+              color: Color(0xFF6F61EF).withOpacity(0.2),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Products in $category category',
+              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+            ),
+          ],
         ),
       ),
     );
