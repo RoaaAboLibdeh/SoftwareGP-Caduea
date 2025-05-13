@@ -1,3 +1,4 @@
+import 'package:cadeau_project/Categories/CategoryProductsPage.dart';
 import 'package:cadeau_project/custom/theme.dart';
 import 'package:cadeau_project/userCart/userCart.dart';
 import 'package:cadeau_project/userHomePage/userHomePage.dart';
@@ -187,7 +188,16 @@ class _CategoriesPageState extends State<CategoriesPage> {
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_rounded, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) =>
+                        userHomePage(userId: widget.userId), // Pass the userId
+              ),
+            );
+          },
         ),
         actions: [
           IconButton(
@@ -361,18 +371,24 @@ class _CategoriesPageState extends State<CategoriesPage> {
         final icon = category['icon'] ?? 'category';
         final imagePath = category['image'];
         final imageUrl = _getCategoryImageUrl(imagePath);
+        final categoryId = category['_id'] ?? ''; // Add this line
 
-        return _buildCategoryCard(name, icon, imageUrl);
+        return _buildCategoryCard(name, icon, imageUrl, categoryId);
       },
     );
   }
 
-  Widget _buildCategoryCard(String name, String icon, String imageUrl) {
+  Widget _buildCategoryCard(
+    String name,
+    String icon,
+    String imageUrl,
+    String categoryId,
+  ) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => _navigateToCategoryProducts(context, name),
+        onTap: () => _navigateToCategoryProducts(context, name, categoryId),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -472,11 +488,20 @@ class _CategoriesPageState extends State<CategoriesPage> {
     );
   }
 
-  void _navigateToCategoryProducts(BuildContext context, String categoryName) {
+  void _navigateToCategoryProducts(
+    BuildContext context,
+    String categoryName,
+    String categoryId,
+  ) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CategoryProductsPage(category: categoryName),
+        builder:
+            (context) => CategoryProductsPage(
+              category: categoryName,
+              categoryId: categoryId,
+              userId: widget.userId,
+            ),
       ),
     );
   }
@@ -567,45 +592,48 @@ class _CategoriesPageState extends State<CategoriesPage> {
   }
 }
 
-class CategoryProductsPage extends StatelessWidget {
-  final String category;
+// class CategoryProductsPage extends StatelessWidget {
+//   final String category;
 
-  const CategoryProductsPage({Key? key, required this.category})
-    : super(key: key);
+//   const CategoryProductsPage({
+//     Key? key,
+//     required this.category,
+//     required String categoryId,
+//   }) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          category,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.category_rounded,
-              size: 64,
-              color: Color(0xFF6F61EF).withOpacity(0.2),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Products in $category category',
-              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text(
+//           category,
+//           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+//         ),
+//         backgroundColor: Colors.white,
+//         elevation: 0,
+//         centerTitle: true,
+//         leading: IconButton(
+//           icon: Icon(Icons.arrow_back_rounded),
+//           onPressed: () => Navigator.pop(context),
+//         ),
+//       ),
+//       body: Center(
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             Icon(
+//               Icons.category_rounded,
+//               size: 64,
+//               color: Color(0xFF6F61EF).withOpacity(0.2),
+//             ),
+//             SizedBox(height: 16),
+//             Text(
+//               'Products in $category category',
+//               style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }

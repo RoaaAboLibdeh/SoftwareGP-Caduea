@@ -10,6 +10,7 @@ class Product {
   final List<String> occasion;
   final int stock;
   final bool isOnSale;
+  final String category; // Add this line
 
   Product({
     required this.id,
@@ -22,6 +23,7 @@ class Product {
     required this.occasion,
     required this.stock,
     this.isOnSale = false,
+    required this.category, // Add this line
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -36,7 +38,14 @@ class Product {
       occasion: List<String>.from(json['occasion'] ?? []),
       stock: json['stock'] ?? 0,
       isOnSale: json['isOnSale'] ?? false,
+      category: _parseCategory(json['category']),
     );
+  }
+
+  static String _parseCategory(dynamic category) {
+    if (category is String) return category;
+    if (category is Map) return category['_id'] ?? category['id'] ?? '';
+    return '';
   }
 
   double get discountedPrice =>

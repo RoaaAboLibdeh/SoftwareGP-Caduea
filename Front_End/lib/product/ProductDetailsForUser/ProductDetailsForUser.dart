@@ -110,10 +110,10 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                           onTap: () => Navigator.pop(context),
                           child: Container(
                             padding: EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.8),
-                              shape: BoxShape.circle,
-                            ),
+                            // decoration: BoxDecoration(
+                            //   color: Colors.white.withOpacity(0.8),
+                            //   shape: BoxShape.circle,
+                            // ),
                           ),
                         ),
                         Container(

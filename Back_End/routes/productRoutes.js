@@ -59,11 +59,22 @@ router.get('/search', async (req, res) => {
         { occasion: regex },
         { recipientType: regex }
       ]
-    }).populate('category');
+    }).populate('category').lean();
 
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+
+router.get('/category/:categoryId', async (req, res) => {
+  try {
+    const products = await Product.find({ category: req.params.categoryId });
+    res.json({ products });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

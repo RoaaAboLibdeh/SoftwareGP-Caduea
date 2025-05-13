@@ -360,6 +360,7 @@ class _userHomePageState extends State<userHomePage> {
         Uri.parse(
           'http://192.168.88.100:5000/api/products/search?q=$query',
         ), // Replace with real URL
+        // headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
@@ -557,7 +558,7 @@ class _userHomePageState extends State<userHomePage> {
                             child: TextField(
                               controller: _model.textController,
                               focusNode: _model.textFieldFocusNode,
-                              onSubmitted: (_) => _performSearch(context),
+                              // onSubmitted: (_) => _performSearch(context),
                               decoration: InputDecoration(
                                 prefixIcon: Icon(
                                   Icons.search_rounded,
