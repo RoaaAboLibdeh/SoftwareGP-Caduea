@@ -1,5 +1,6 @@
 import 'package:avatar_plus/avatar_plus.dart';
 import 'package:cadeau_project/avatar_chat_page/avatar_chat_page.dart';
+import 'package:cadeau_project/checkout_screen_map.dart/checkout_screen.dart';
 import 'package:cadeau_project/product/ProductDetailsForUser/ProductDetailsForUser.dart';
 import 'package:cadeau_project/products_with_discount/products_with_discount.dart';
 import 'package:cadeau_project/searchResults/searchResult.dart';
@@ -83,6 +84,16 @@ class _userHomePageState extends State<userHomePage> {
       ), // Active icon color
       label: 'Categories',
     ),
+
+    BottomNavigationBarItem(
+      icon: Icon(Icons.category_outlined),
+      activeIcon: Icon(
+        Icons.location_city,
+        color: Color.fromARGB(255, 164, 145, 240),
+      ), // Active icon color
+      label: 'Location',
+    ),
+
     BottomNavigationBarItem(
       icon: Icon(Icons.shopping_cart_outlined),
       activeIcon: Icon(
@@ -939,11 +950,16 @@ class _userHomePageState extends State<userHomePage> {
                 } else if (index == 2) {
                   Navigator.pushReplacement(
                     context,
+                    MaterialPageRoute(builder: (context) => CheckoutScreen()),
+                  );
+                } else if (index == 3) {
+                  Navigator.pushReplacement(
+                    context,
                     MaterialPageRoute(
                       builder: (context) => CartWidget(userId: widget.userId),
                     ),
                   );
-                } else if (index == 3) {
+                } else if (index == 4) {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
