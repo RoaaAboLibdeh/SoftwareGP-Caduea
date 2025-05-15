@@ -1,6 +1,6 @@
 import 'package:cadeau_project/Categories/ListCategories.dart';
 import 'package:cadeau_project/userHomePage/userHomePage.dart';
-
+import '/custom/theme.dart';
 import '/custom/icon_button.dart';
 import '/custom/theme.dart';
 import '/custom/util.dart';
@@ -9,6 +9,9 @@ import 'package:flutter/material.dart';
 
 import 'userCart_model.dart';
 export 'userCart_model.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:cadeau_project/models/userCart_model.dart';
 
 class CartWidget extends StatefulWidget {
   final String userId; // Add userId parameter
@@ -24,6 +27,7 @@ class CartWidget extends StatefulWidget {
 
 class _CartWidgetState extends State<CartWidget> {
   late CartModel _model;
+  late Future<Cart> _cartFuture;
   int _currentIndex = 2;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -31,951 +35,272 @@ class _CartWidgetState extends State<CartWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => CartModel());
+    _cartFuture = _fetchCart();
   }
 
-  // Bottom Navigation Items (like SHEIN)
-  final List<BottomNavigationBarItem> _bottomNavItems = [
-    BottomNavigationBarItem(
-      icon: Icon(Icons.home_outlined),
-      activeIcon: Icon(
-        Icons.home,
-        color: Color.fromARGB(255, 164, 145, 240),
-      ), // Active icon color
-      label: 'Home',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.category_outlined),
-      activeIcon: Icon(
-        Icons.category,
-        color: Color.fromARGB(255, 164, 145, 240),
-      ), // Active icon color
-      label: 'Categories',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.shopping_cart_outlined),
-      activeIcon: Icon(
-        Icons.shopping_cart,
-        color: Color.fromARGB(255, 164, 145, 240),
-      ), // Active icon color
-      label: 'Cart',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.person_outlined),
-      activeIcon: Icon(
-        Icons.person,
-        color: Color.fromARGB(255, 164, 145, 240),
-      ), // Active icon color
-      label: 'Me',
-    ),
-  ];
+  Future<Cart> _fetchCart() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.88.100:5000/api/cart/${widget.userId}'),
+        headers: {'Content-Type': 'application/json'},
+      );
 
-  @override
-  void dispose() {
-    _model.dispose();
+      print('Cart API status: ${response.statusCode}');
+      print('Cart API body: ${response.body}');
 
-    super.dispose();
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('Decoded cart data: $data');
+        return Cart.fromJson(data);
+      } else if (response.statusCode == 404) {
+        // Handle empty cart case
+        return Cart(
+          userId: widget.userId,
+          items: [],
+          updatedAt: DateTime.now(),
+        );
+      } else {
+        throw Exception('Failed to load cart: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in _fetchCart: $e');
+      throw e;
+    }
   }
+
+  Future<void> _removeItem(String productId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('http://192.168.88.100:5000/api/cart/remove'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'userId': widget.userId, 'productId': productId}),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _cartFuture = _fetchCart(); // Refresh cart
+        });
+      }
+    } catch (e) {
+      print('Error removing item: $e');
+    }
+  }
+
+  Future<void> _updateQuantity(String productId, int newQuantity) async {
+    try {
+      final response = await http.put(
+        Uri.parse('http://192.168.88.100:5000/api/cart/update'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'userId': widget.userId,
+          'productId': productId,
+          'quantity': newQuantity,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _cartFuture = _fetchCart(); // Refresh cart
+        });
+      }
+    } catch (e) {
+      print('Error updating quantity: $e');
+    }
+  }
+
+  // ... (keep bottom navigation and other existing code)
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
+      onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: Color(0xFFF1F5F8),
+        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         appBar: AppBar(
-          backgroundColor: Color(0xFFF1F5F8),
+          backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
           automaticallyImplyLeading: false,
+          elevation: 0,
           title: Text(
             'My Cart',
-            style: FlutterFlowTheme.of(context).displaySmall.override(
-              fontFamily: 'Outfit',
-              color: Color(0xFF15161E),
-              fontSize: 17,
-              letterSpacing: 0.0,
-              fontWeight: FontWeight.w500,
-            ),
+            style: FlutterFlowTheme.of(context).titleMedium,
           ),
-          actions: [],
-          centerTitle: false,
-          elevation: 0,
         ),
-        body: Column(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
+        body: FutureBuilder<Cart>(
+          future: _cartFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError) {
+              print('Error details: ${snapshot.error}');
+              return Center(
                 child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(16, 0, 0, 0),
-                      child: Text(
-                        'Below are the items in your cart.',
-                        style: FlutterFlowTheme.of(
-                          context,
-                        ).labelMedium.override(
-                          fontFamily: 'Outfit',
-                          color: Color(0xFF57636C),
-                          fontSize: 14,
-                          letterSpacing: 0.0,
-                          fontWeight: FontWeight.w500,
-                          fontStyle:
-                              FlutterFlowTheme.of(
-                                context,
-                              ).labelMedium.fontStyle,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(0, 12, 0, 0),
-                      child: ListView(
-                        padding: EdgeInsets.zero,
-                        primary: false,
-                        shrinkWrap: true,
-                        scrollDirection: Axis.vertical,
-                        children: [
-                          Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                              16,
-                              8,
-                              16,
-                              0,
-                            ),
-                            child: Container(
-                              width: double.infinity,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    blurRadius: 4,
-                                    color: Color(0x320E151B),
-                                    offset: Offset(0.0, 1),
-                                  ),
-                                ],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                  12,
-                                  8,
-                                  8,
-                                  8,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Hero(
-                                      tag: 'ControllerImage',
-                                      transitionOnUserGestures: true,
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Image.network(
-                                          'https://static.nike.com/a/images/t_prod_ss/w_640,c_limit,f_auto/95c8dcbe-3d3f-46a9-9887-43161ef949c5/sleepers-of-the-week-release-date.jpg',
-                                          width: 80,
-                                          height: 80,
-                                          fit: BoxFit.fitWidth,
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(
-                                          12,
-                                          0,
-                                          0,
-                                          0,
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.max,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Padding(
-                                              padding:
-                                                  EdgeInsetsDirectional.fromSTEB(
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    8,
-                                                  ),
-                                              child: Text(
-                                                'AirMax Low',
-                                                style: FlutterFlowTheme.of(
-                                                  context,
-                                                ).titleLarge.override(
-                                                  fontFamily: 'Outfit',
-                                                  fontWeight: FontWeight.w500,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                        context,
-                                                      ).titleLarge.fontStyle,
-
-                                                  color: Color(0xFF0F1113),
-                                                  fontSize: 18,
-                                                  letterSpacing: 0.0,
-                                                ),
-                                              ),
-                                            ),
-                                            Text(
-                                              '\$120.00',
-                                              style: FlutterFlowTheme.of(
-                                                context,
-                                              ).labelMedium.override(
-                                                fontFamily: 'Outfit',
-                                                fontWeight: FontWeight.w500,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(
-                                                      context,
-                                                    ).labelMedium.fontStyle,
-
-                                                color: Color(0xFF57636C),
-                                                fontSize: 14,
-                                                letterSpacing: 0.0,
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding:
-                                                  EdgeInsetsDirectional.fromSTEB(
-                                                    0,
-                                                    8,
-                                                    0,
-                                                    0,
-                                                  ),
-                                              child: Text(
-                                                'Quanity: 1',
-                                                style: FlutterFlowTheme.of(
-                                                  context,
-                                                ).labelSmall.override(
-                                                  fontFamily: 'Outfit',
-                                                  fontWeight: FontWeight.w500,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                        context,
-                                                      ).labelSmall.fontStyle,
-
-                                                  color: Color(0xFF57636C),
-                                                  fontSize: 12,
-                                                  letterSpacing: 0.0,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    FlutterFlowIconButton(
-                                      borderColor: Colors.transparent,
-                                      borderRadius: 30,
-                                      borderWidth: 1,
-                                      buttonSize: 40,
-                                      icon: Icon(
-                                        Icons.edit_outlined,
-                                        color: Color(0xFF57636C),
-                                        size: 20,
-                                      ),
-                                      onPressed: () {
-                                        print('IconButton pressed ...');
-                                      },
-                                    ),
-                                    FlutterFlowIconButton(
-                                      borderColor: Colors.transparent,
-                                      borderRadius: 30,
-                                      borderWidth: 1,
-                                      buttonSize: 40,
-                                      icon: Icon(
-                                        Icons.delete_outline_rounded,
-                                        color: Color(0xFFDE4C62),
-                                        size: 20,
-                                      ),
-                                      onPressed: () {
-                                        print('IconButton pressed ...');
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                              16,
-                              8,
-                              16,
-                              0,
-                            ),
-                            child: Container(
-                              width: double.infinity,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    blurRadius: 4,
-                                    color: Color(0x320E151B),
-                                    offset: Offset(0.0, 1),
-                                  ),
-                                ],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                  12,
-                                  8,
-                                  8,
-                                  8,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Hero(
-                                      tag: 'ControllerImage',
-                                      transitionOnUserGestures: true,
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Image.network(
-                                          'https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/7c5678f4-c28d-4862-a8d9-56750f839f12/zion-1-basketball-shoes-bJ0hLJ.png',
-                                          width: 80,
-                                          height: 80,
-                                          fit: BoxFit.fitWidth,
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(
-                                          12,
-                                          0,
-                                          0,
-                                          0,
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.max,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Padding(
-                                              padding:
-                                                  EdgeInsetsDirectional.fromSTEB(
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    8,
-                                                  ),
-                                              child: Text(
-                                                'Zion 1',
-                                                style: FlutterFlowTheme.of(
-                                                  context,
-                                                ).titleLarge.override(
-                                                  fontFamily: 'Outfit',
-                                                  fontWeight: FontWeight.w500,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                        context,
-                                                      ).titleLarge.fontStyle,
-
-                                                  color: Color(0xFF0F1113),
-                                                  fontSize: 18,
-                                                  letterSpacing: 0.0,
-                                                ),
-                                              ),
-                                            ),
-                                            Text(
-                                              '\$120.00',
-                                              style: FlutterFlowTheme.of(
-                                                context,
-                                              ).labelMedium.override(
-                                                fontFamily: 'Outfit',
-                                                fontWeight: FontWeight.w500,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(
-                                                      context,
-                                                    ).labelMedium.fontStyle,
-
-                                                color: Color(0xFF57636C),
-                                                fontSize: 14,
-                                                letterSpacing: 0.0,
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding:
-                                                  EdgeInsetsDirectional.fromSTEB(
-                                                    0,
-                                                    8,
-                                                    0,
-                                                    0,
-                                                  ),
-                                              child: Text(
-                                                'Quanity: 1',
-                                                style: FlutterFlowTheme.of(
-                                                  context,
-                                                ).labelSmall.override(
-                                                  fontFamily: 'Outfit',
-                                                  fontWeight: FontWeight.w500,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                        context,
-                                                      ).labelSmall.fontStyle,
-
-                                                  color: Color(0xFF57636C),
-                                                  fontSize: 12,
-                                                  letterSpacing: 0.0,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    FlutterFlowIconButton(
-                                      borderColor: Colors.transparent,
-                                      borderRadius: 30,
-                                      borderWidth: 1,
-                                      buttonSize: 40,
-                                      icon: Icon(
-                                        Icons.edit_outlined,
-                                        color: Color(0xFF57636C),
-                                        size: 20,
-                                      ),
-                                      onPressed: () {
-                                        print('IconButton pressed ...');
-                                      },
-                                    ),
-                                    FlutterFlowIconButton(
-                                      borderColor: Colors.transparent,
-                                      borderRadius: 30,
-                                      borderWidth: 1,
-                                      buttonSize: 40,
-                                      icon: Icon(
-                                        Icons.delete_outline_rounded,
-                                        color: Color(0xFFDE4C62),
-                                        size: 20,
-                                      ),
-                                      onPressed: () {
-                                        print('IconButton pressed ...');
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                              16,
-                              8,
-                              16,
-                              0,
-                            ),
-                            child: Container(
-                              width: double.infinity,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    blurRadius: 4,
-                                    color: Color(0x320E151B),
-                                    offset: Offset(0.0, 1),
-                                  ),
-                                ],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                  12,
-                                  8,
-                                  8,
-                                  8,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Hero(
-                                      tag: 'ControllerImage',
-                                      transitionOnUserGestures: true,
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Image.network(
-                                          'https://static.nike.com/a/images/t_PDP_864_v1/f_auto,b_rgb:f5f5f5/c639068c-ee02-493b-83a1-630885f45fb0/therma-mens-full-zip-training-hoodie-DwfKtF.png',
-                                          width: 80,
-                                          height: 80,
-                                          fit: BoxFit.fitWidth,
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(
-                                          12,
-                                          0,
-                                          0,
-                                          0,
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.max,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Padding(
-                                              padding:
-                                                  EdgeInsetsDirectional.fromSTEB(
-                                                    0,
-                                                    0,
-                                                    0,
-                                                    8,
-                                                  ),
-                                              child: Text(
-                                                'Jumpsuit',
-                                                style: FlutterFlowTheme.of(
-                                                  context,
-                                                ).titleLarge.override(
-                                                  fontFamily: 'Outfit',
-                                                  fontWeight: FontWeight.w500,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                        context,
-                                                      ).titleLarge.fontStyle,
-
-                                                  color: Color(0xFF0F1113),
-                                                  fontSize: 18,
-                                                  letterSpacing: 0.0,
-                                                ),
-                                              ),
-                                            ),
-                                            Text(
-                                              '\$120.00',
-                                              style: FlutterFlowTheme.of(
-                                                context,
-                                              ).labelMedium.override(
-                                                fontFamily: 'Outfit',
-                                                fontWeight: FontWeight.w500,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(
-                                                      context,
-                                                    ).labelMedium.fontStyle,
-
-                                                color: Color(0xFF57636C),
-                                                fontSize: 14,
-                                                letterSpacing: 0.0,
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding:
-                                                  EdgeInsetsDirectional.fromSTEB(
-                                                    0,
-                                                    8,
-                                                    0,
-                                                    0,
-                                                  ),
-                                              child: Text(
-                                                'Quanity: 1',
-                                                style: FlutterFlowTheme.of(
-                                                  context,
-                                                ).labelSmall.override(
-                                                  fontFamily: 'Outfit',
-                                                  fontWeight: FontWeight.w500,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                        context,
-                                                      ).labelSmall.fontStyle,
-
-                                                  color: Color(0xFF57636C),
-                                                  fontSize: 12,
-                                                  letterSpacing: 0.0,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    FlutterFlowIconButton(
-                                      borderColor: Colors.transparent,
-                                      borderRadius: 30,
-                                      borderWidth: 1,
-                                      buttonSize: 40,
-                                      icon: Icon(
-                                        Icons.edit_outlined,
-                                        color: Color(0xFF57636C),
-                                        size: 20,
-                                      ),
-                                      onPressed: () {
-                                        print('IconButton pressed ...');
-                                      },
-                                    ),
-                                    FlutterFlowIconButton(
-                                      borderColor: Colors.transparent,
-                                      borderRadius: 30,
-                                      borderWidth: 1,
-                                      buttonSize: 40,
-                                      icon: Icon(
-                                        Icons.delete_outline_rounded,
-                                        color: Color(0xFFDE4C62),
-                                        size: 20,
-                                      ),
-                                      onPressed: () {
-                                        print('IconButton pressed ...');
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                              24,
-                              16,
-                              24,
-                              4,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                Text(
-                                  'Price Breakdown',
-                                  style: FlutterFlowTheme.of(
-                                    context,
-                                  ).bodyMedium.override(
-                                    fontFamily: 'Outfit',
-                                    fontWeight: FontWeight.w500,
-                                    fontStyle:
-                                        FlutterFlowTheme.of(
-                                          context,
-                                        ).bodyMedium.fontStyle,
-
-                                    color: Color(0xFF0F1113),
-                                    fontSize: 14,
-                                    letterSpacing: 0.0,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                              24,
-                              8,
-                              24,
-                              0,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Base Price',
-                                  style: FlutterFlowTheme.of(
-                                    context,
-                                  ).labelMedium.override(
-                                    fontFamily: 'Outfit',
-                                    fontWeight: FontWeight.w500,
-                                    fontStyle:
-                                        FlutterFlowTheme.of(
-                                          context,
-                                        ).labelMedium.fontStyle,
-
-                                    color: Color(0xFF57636C),
-                                    fontSize: 14,
-                                    letterSpacing: 0.0,
-                                  ),
-                                ),
-                                Text(
-                                  '\$120.00',
-                                  style: FlutterFlowTheme.of(
-                                    context,
-                                  ).bodyLarge.override(
-                                    fontFamily: 'Outfit',
-                                    fontWeight: FontWeight.w500,
-                                    fontStyle:
-                                        FlutterFlowTheme.of(
-                                          context,
-                                        ).bodyLarge.fontStyle,
-
-                                    color: Color(0xFF0F1113),
-                                    fontSize: 16,
-                                    letterSpacing: 0.0,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                              24,
-                              8,
-                              24,
-                              0,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Taxes',
-                                  style: FlutterFlowTheme.of(
-                                    context,
-                                  ).labelMedium.override(
-                                    fontFamily: 'Outfit',
-                                    fontWeight: FontWeight.w500,
-                                    fontStyle:
-                                        FlutterFlowTheme.of(
-                                          context,
-                                        ).labelMedium.fontStyle,
-
-                                    color: Color(0xFF57636C),
-                                    fontSize: 14,
-                                    letterSpacing: 0.0,
-                                  ),
-                                ),
-                                Text(
-                                  '\$12.25',
-                                  style: FlutterFlowTheme.of(
-                                    context,
-                                  ).bodyLarge.override(
-                                    fontFamily: 'Outfit',
-                                    fontWeight: FontWeight.w500,
-                                    fontStyle:
-                                        FlutterFlowTheme.of(
-                                          context,
-                                        ).bodyLarge.fontStyle,
-
-                                    color: Color(0xFF0F1113),
-                                    fontSize: 16,
-                                    letterSpacing: 0.0,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                              24,
-                              4,
-                              24,
-                              12,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  children: [
-                                    Text(
-                                      'Total',
-                                      style: FlutterFlowTheme.of(
-                                        context,
-                                      ).labelMedium.override(
-                                        fontFamily: 'Outfit',
-                                        fontWeight: FontWeight.w500,
-                                        fontStyle:
-                                            FlutterFlowTheme.of(
-                                              context,
-                                            ).labelMedium.fontStyle,
-
-                                        color: Color(0xFF57636C),
-                                        fontSize: 14,
-                                        letterSpacing: 0.0,
-                                      ),
-                                    ),
-                                    FlutterFlowIconButton(
-                                      borderColor: Colors.transparent,
-                                      borderRadius: 30,
-                                      borderWidth: 1,
-                                      buttonSize: 36,
-                                      icon: Icon(
-                                        Icons.info_outlined,
-                                        color: Color(0xFF57636C),
-                                        size: 18,
-                                      ),
-                                      onPressed: () {
-                                        print('IconButton pressed ...');
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                Text(
-                                  '\$137.75',
-                                  style: FlutterFlowTheme.of(
-                                    context,
-                                  ).displaySmall.override(
-                                    fontFamily: 'Outfit',
-                                    fontWeight: FontWeight.w500,
-                                    fontStyle:
-                                        FlutterFlowTheme.of(
-                                          context,
-                                        ).displaySmall.fontStyle,
-
-                                    color: Color(0xFF0F1113),
-                                    fontSize: 32,
-                                    letterSpacing: 0.0,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                    Icon(Icons.error_outline, color: Colors.red, size: 50),
+                    SizedBox(height: 16),
+                    Text('Failed to load cart', style: TextStyle(fontSize: 18)),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _cartFuture = _fetchCart();
+                        });
+                      },
+                      child: Text('Retry'),
                     ),
                   ],
                 ),
-              ),
-            ),
-            Container(
-              width: double.infinity,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Color(0xFF827AE1),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 4,
-                    color: Color(0x320E151B),
-                    offset: Offset(0.0, -2),
-                  ),
-                ],
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(0),
-                  bottomRight: Radius.circular(0),
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
-                ),
-              ),
-              alignment: AlignmentDirectional(0, 0),
-              child: Padding(
-                padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 32),
-                child: Text(
-                  'Checkout (\$137.75)',
-                  style: FlutterFlowTheme.of(context).titleMedium.override(
-                    fontFamily: 'Outfit',
-                    fontWeight: FontWeight.w500,
-                    fontStyle:
-                        FlutterFlowTheme.of(context).titleMedium.fontStyle,
+              );
+            }
 
-                    color: Colors.white,
-                    fontSize: 18,
-                    letterSpacing: 0.0,
-                  ),
-                ),
-              ),
-            ),
-          ],
+            if (snapshot.hasData) {
+              final cart = snapshot.data!;
+              if (cart.items.isEmpty) {
+                return Center(child: Text('Your cart is empty.'));
+              }
+
+              return ListView.builder(
+                itemCount: cart.items.length,
+                itemBuilder: (context, index) {
+                  final item = cart.items[index];
+
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: ListTile(
+                      leading: Image.network(
+                        (item.product.imageUrls.isNotEmpty
+                            ? item.product.imageUrls[0]
+                            : '')!,
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(Icons.image),
+                      ),
+                      title: Text(item.product.name ?? 'No Name'),
+                      subtitle: Text('Quantity: ${item.quantity}'),
+                      trailing: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('\$${item.product.price.toStringAsFixed(2)}'),
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () => _removeItem(item.product.id),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            }
+
+            // ✅ Final fallback return
+            return Center(child: Text('No cart data available.'));
+          },
         ),
+        bottomNavigationBar: _buildBottomNavigationBar(context),
+      ),
+    );
+  }
 
-        // 👇 SHEIN-like Bottom Navigation Bar
-        // Bottom Navigation Bar implementation
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                spreadRadius: 1,
-                blurRadius: 8,
-                offset: Offset(0, -3),
-              ),
-            ],
+  Widget _priceRow(
+    BuildContext context,
+    String label,
+    double value, {
+    bool isTotal = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style:
+                isTotal
+                    ? FlutterFlowTheme.of(context).bodyLarge
+                    : FlutterFlowTheme.of(context).labelMedium,
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-            child: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: (index) {
-                if (index == _currentIndex)
-                  return; // 👈 Prevents duplicate pushes
+          Text(
+            '\$${value.toStringAsFixed(2)}',
+            style:
+                isTotal
+                    ? FlutterFlowTheme.of(context).displaySmall.override(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                    )
+                    : FlutterFlowTheme.of(context).bodyLarge,
+          ),
+        ],
+      ),
+    );
+  }
 
-                setState(() => _currentIndex = index);
+  Widget _buildBottomNavigationBar(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: Offset(0, -3),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            if (index == _currentIndex) return;
+            setState(() => _currentIndex = index);
 
-                if (index == 0) {
-                  Navigator.pushReplacement(
-                    // 👈 Use pushReplacement to avoid stack buildup
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => userHomePage(userId: widget.userId),
-                    ),
-                  );
-                } else if (index == 1) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => CategoriesPage(userId: widget.userId),
-                    ),
-                  );
-                } else if (index == 2) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CartWidget(userId: widget.userId),
-                    ),
-                  );
-                } else if (index == 3) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CartWidget(userId: widget.userId),
-                    ), // 👈 Changed to ProfilePage (assuming "Me" is a profile)
-                  );
-                }
-              },
-              type: BottomNavigationBarType.fixed,
-              selectedItemColor: Color.fromARGB(255, 164, 145, 240),
-              unselectedItemColor: Colors.grey[600],
-              selectedLabelStyle: FlutterFlowTheme.of(
-                context,
-              ).titleSmall.override(
-                fontFamily: 'Outfit',
-                color: Color.fromARGB(
-                  255,
-                  164,
-                  145,
-                  240,
-                ), // Using your purple color for selected text
-                fontSize: 12, // Adjusted to match typical bottom nav text size
-                letterSpacing: 0.0,
-                fontWeight: FontWeight.w600, // Slightly bolder for selected
-              ),
-              unselectedLabelStyle: FlutterFlowTheme.of(
-                context,
-              ).titleSmall.override(
-                fontFamily: 'Outfit',
-                color: Colors.grey[600],
-                fontSize: 12,
-                letterSpacing: 0.0,
-                fontWeight: FontWeight.normal,
-              ),
-              backgroundColor: Colors.white,
-              elevation: 0,
-              showSelectedLabels: true,
-              showUnselectedLabels: true,
-              items: _bottomNavItems,
+            Widget nextPage;
+            switch (index) {
+              case 0:
+                nextPage = userHomePage(userId: widget.userId);
+                break;
+              case 1:
+                nextPage = CategoriesPage(userId: widget.userId);
+                break;
+              case 2:
+                nextPage = CartWidget(userId: widget.userId);
+                break;
+              case 3:
+                nextPage = CartWidget(userId: widget.userId); // Replace later
+                break;
+              default:
+                return;
+            }
+
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => nextPage),
+            );
+          },
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: FlutterFlowTheme.of(context).primary,
+          unselectedItemColor: FlutterFlowTheme.of(context).secondaryText,
+          selectedLabelStyle: FlutterFlowTheme.of(context).titleSmall,
+          unselectedLabelStyle: FlutterFlowTheme.of(context).labelSmall,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.category),
+              label: 'Categories',
             ),
-          ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.shopping_cart),
+              label: 'Cart',
+            ),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Me'),
+          ],
         ),
       ),
     );

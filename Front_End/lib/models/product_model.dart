@@ -28,9 +28,9 @@ class Product {
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      id: json['_id'] ?? json['productId'],
-      name: json['name'],
-      description: json['description'],
+      id: json['_id'] ?? json['productId'] ?? '',
+      name: json['name'] ?? 'unKnown Product',
+      description: json['description'] ?? '',
       price: json['price']?.toDouble() ?? 0.0,
       discountAmount: json['discountAmount']?.toDouble(),
       imageUrls: List<String>.from(json['imageUrls'] ?? []),
@@ -46,6 +46,22 @@ class Product {
     if (category is String) return category;
     if (category is Map) return category['_id'] ?? category['id'] ?? '';
     return '';
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'name': name,
+      'description': description,
+      'price': price,
+      'discountAmount': discountAmount,
+      'imageUrls': imageUrls,
+      'recipientType': recipientType,
+      'occasion': occasion,
+      'stock': stock,
+      'isOnSale': isOnSale,
+      'category': category,
+    };
   }
 
   double get discountedPrice =>
