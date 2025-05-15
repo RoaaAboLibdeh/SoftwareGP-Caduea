@@ -6,6 +6,8 @@ const ownerRoutes = require('./routes/ownerRoutes');
 // const adminRoutes = require('./routes/adminRoutes'); // ✅ If using admin approve/reject
 const productsRoutes = require('./routes/productRoutes');
 const path = require('path');
+const cartRoutes = require('./routes/cartRoutes');
+
 
 const app = express();
 app.use(express.json());
@@ -56,3 +58,10 @@ const reviewRoutes = require('./routes/ReviewRoutes');
 // app.use(express.json());
 app.use('/api/reviews', reviewRoutes);
 
+/// for Cart
+app.use('/api/cart', cartRoutes);
+
+
+//for favorite 
+const favoriteRoutes = require('./routes/favoriteRoutes');
+app.use('/api/favorites', favoriteRoutes);
