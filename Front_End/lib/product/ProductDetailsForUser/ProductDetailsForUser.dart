@@ -1,5 +1,6 @@
 // lib/pages/ProductDetailsForUser.dart
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cadeau_project/avatar_notification/avatar_notification.dart';
 import 'package:cadeau_project/custom/form_field_controller.dart';
 import 'package:cadeau_project/models/review_model.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +30,8 @@ class ProductDetailsWidget extends StatefulWidget {
 
 class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
   late ProductDetailsModel _model;
+  bool _isFavorite = false;
+  bool _isInCart = false;
   final PageController _imageController = PageController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   List<Review> _reviews = [];
@@ -41,6 +44,8 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
     _model = ProductDetailsModel();
     _model.countControllerValue = 1;
     _fetchReviews();
+    _checkFavoriteStatus(); // Add this
+    _checkCartStatus(); // Add this
   }
 
   @override
@@ -63,6 +68,122 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
       fontWeight: fontWeight ?? FontWeight.w600,
       color: color,
     );
+  }
+
+  // Add these new methods
+  Future<void> _checkFavoriteStatus() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.88.100:5000/api/favorites/${widget.userId}'),
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        final List<dynamic> items = decoded['items'] ?? [];
+        setState(() {
+          _isFavorite = items.any(
+            (item) =>
+                item['product']?['_id'] == widget.product.id ||
+                item['product'] == widget.product.id,
+          );
+        });
+      }
+    } catch (e) {
+      print('Error checking favorite status: $e');
+    }
+  }
+
+  Future<void> _checkCartStatus() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.88.100:5000/api/cart/${widget.userId}'),
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        final List<dynamic> items = decoded['items'] ?? [];
+        setState(() {
+          _isInCart = items.any(
+            (item) =>
+                item['product']?['_id'] == widget.product.id ||
+                item['product'] == widget.product.id,
+          );
+        });
+      }
+    } catch (e) {
+      print('Error checking cart status: $e');
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    try {
+      final bool wasFavorite =
+          _isFavorite; // Store current state before API call
+      final url =
+          wasFavorite
+              ? 'http://192.168.88.100:5000/api/favorites/remove'
+              : 'http://192.168.88.100:5000/api/favorites/add';
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'userId': widget.userId,
+          'productId': widget.product.id,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _isFavorite = !wasFavorite; // Toggle based on previous state
+        });
+
+        // Show notification ONLY when adding to favorites (wasFavorite was false)
+        if (!wasFavorite) {
+          final userResponse = await http.get(
+            Uri.parse('http://192.168.88.100:5000/api/users/${widget.userId}'),
+          );
+
+          if (userResponse.statusCode == 200) {
+            final userData = json.decode(userResponse.body);
+            final avatar = userData['avatar'] ?? 'default_avatar';
+            final String displayName =
+                userData['displayName'] ??
+                userData['name'] ??
+                userData['username'] ??
+                'User'; // Define displayName here
+            userData['name'] ?? 'User'; // Get display name from user data
+            AvatarNotification.showFavoriteMessage(
+              context,
+              avatar,
+              displayName,
+            );
+          }
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              !wasFavorite ? 'Added to favorites' : 'Removed from favorites',
+            ),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -122,10 +243,15 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                             color: Colors.white.withOpacity(0.8),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            Icons.favorite_border_rounded,
-                            color: Colors.black,
-                            size: 24,
+                          child: IconButton(
+                            icon: Icon(
+                              _isFavorite
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              color: _isFavorite ? Colors.red : Colors.black,
+                              size: 24,
+                            ),
+                            onPressed: _toggleFavorite,
                           ),
                         ),
                       ],
@@ -454,20 +580,85 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
           child: FloatingActionButton.extended(
             onPressed:
                 product.stock > 0
-                    ? () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Added to cart'),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                    ? () async {
+                      try {
+                        final response = await http.post(
+                          Uri.parse('http://192.168.88.100:5000/api/cart/add'),
+                          headers: {'Content-Type': 'application/json'},
+                          body: jsonEncode({
+                            'userId': widget.userId,
+                            'productId': widget.product.id,
+                            'quantity': _model.countControllerValue,
+                          }),
+                        );
+
+                        if (response.statusCode == 200) {
+                          setState(() {
+                            _isInCart = true;
+                          });
+                          // Add this to show avatar notification when adding to cart
+                          final userResponse = await http.get(
+                            Uri.parse(
+                              'http://192.168.88.100:5000/api/users/${widget.userId}',
+                            ),
+                          );
+
+                          if (userResponse.statusCode == 200) {
+                            final userData = json.decode(userResponse.body);
+                            final avatar =
+                                userData['avatar'] ?? 'default_avatar';
+                            final String displayName =
+                                userData['displayName'] ??
+                                userData['name'] ??
+                                userData['username'] ??
+                                'User'; // Define displayName here
+                            AvatarNotification.showCartMessage(
+                              context,
+                              avatar,
+                              displayName,
+                            );
+                          }
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Added to cart'),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Failed to add to cart'),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error: ${e.toString()}'),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            backgroundColor: Colors.red,
                           ),
-                        ),
-                      );
+                        );
+                      }
                     }
                     : null,
             backgroundColor:
-                product.stock > 0 ? theme.primary : Colors.grey[400],
+                _isInCart
+                    ? Colors.green
+                    : (product.stock > 0 ? theme.primary : Colors.grey[400]),
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -475,10 +666,17 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
             label: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.shopping_bag_outlined, color: Colors.white),
+                Icon(
+                  _isInCart
+                      ? Icons.check_circle_outline
+                      : Icons.shopping_bag_outlined,
+                  color: Colors.white,
+                ),
                 SizedBox(width: 8),
                 Text(
-                  product.stock > 0
+                  _isInCart
+                      ? 'In Cart - \$${((product.discountedPrice ?? product.price ?? 0) * _model.countControllerValue).toStringAsFixed(2)}'
+                      : product.stock > 0
                       ? 'Add to Cart - \$${((product.discountedPrice ?? product.price ?? 0) * _model.countControllerValue).toStringAsFixed(2)}'
                       : 'Out of Stock',
                   style: TextStyle(
