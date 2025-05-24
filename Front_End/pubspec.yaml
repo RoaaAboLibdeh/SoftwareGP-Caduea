@@ -54,7 +54,7 @@ dependencies:
   page_transition: ^2.2.1
   chewie: ^1.11.0
   auto_size_text: ^3.0.0
-  webview_flutter: ^4.10.0
+  webview_flutter: ^4.4.2
   webview_flutter_android: ^4.3.3
   flutter_animate: ^4.5.2
   dropdown_button2: 2.3.9
@@ -73,10 +73,9 @@ dependencies:
   badges: ^3.1.2
   fluttertoast: ^8.2.12
   flutter_stripe:
+  flutter_inappwebview: ^6.0.0
   
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -97,6 +96,9 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
 
   # To add assets to your application, add an assets section, like this:
   # assets:

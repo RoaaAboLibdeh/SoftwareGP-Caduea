@@ -1,6 +1,8 @@
 import 'package:cadeau_project/Categories/ListCategories.dart';
+import 'package:cadeau_project/checkout_process/giftbox_webview.dart';
 import 'package:cadeau_project/checkout_process/move_to_checkout_and_pay.dart';
 import 'package:cadeau_project/home_page_payment.dart';
+import 'package:cadeau_project/pexels_images_service/GiftImageScreen.dart';
 import 'package:cadeau_project/userHomePage/userHomePage.dart';
 import '/custom/theme.dart';
 import '/custom/icon_button.dart';
@@ -527,6 +529,32 @@ class _CartWidgetState extends State<CartWidget> {
             ),
             child: Text(
               'Proceed to Checkout',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize:
+                    FlutterFlowTheme.of(context)?.titleMedium?.fontSize ?? 16,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => GiftBoxWebView()),
+              );
+            },
+
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  FlutterFlowTheme.of(context)?.primary ??
+                  const Color.fromARGB(255, 243, 103, 33),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              minimumSize: Size(double.infinity, 50),
+            ),
+            child: Text(
+              'Proceed to choose your card',
               style: TextStyle(
                 color: Colors.white,
                 fontSize:
