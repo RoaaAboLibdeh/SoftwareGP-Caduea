@@ -1,9 +1,15 @@
+import 'package:cadeau_project/keys.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'Sign_login/Authentication.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  Stripe.publishableKey = publishablekey;
+  await Stripe.instance.applySettings();
   runApp(const MyApp());
 }
 

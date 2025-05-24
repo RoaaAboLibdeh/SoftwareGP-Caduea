@@ -1,4 +1,6 @@
 import 'package:cadeau_project/Categories/ListCategories.dart';
+import 'package:cadeau_project/checkout_process/move_to_checkout_and_pay.dart';
+import 'package:cadeau_project/home_page_payment.dart';
 import 'package:cadeau_project/userHomePage/userHomePage.dart';
 import '/custom/theme.dart';
 import '/custom/icon_button.dart';
@@ -504,7 +506,16 @@ class _CartWidgetState extends State<CartWidget> {
           SizedBox(height: 16),
           ElevatedButton(
             onPressed: () {
-              // Handle checkout
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => MoveToCheckoutAndPay(
+                        userId: widget.userId,
+                        totalAmount: total,
+                      ),
+                ),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor:

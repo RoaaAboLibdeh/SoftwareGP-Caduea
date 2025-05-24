@@ -1,4 +1,5 @@
 import 'package:cadeau_project/custom/theme.dart';
+import 'package:cadeau_project/home_page_payment.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -85,7 +86,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             fontSize: 14,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.3,
-            color: Colors.deepPurple,
+            color: Color.fromARGB(255, 79, 6, 6),
           ),
         ),
         backgroundColor: Color(0xFFF7F7F7),
@@ -185,6 +186,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ],
                 ),
               ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SizedBox(
+          height: 50,
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => HomePagePayment()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 79, 6, 6),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'Proceed to Payment',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
