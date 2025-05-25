@@ -1,3 +1,5 @@
+import 'package:cadeau_project/chosing_card_images/choosing_Card_for_Gift.dart';
+import 'package:cadeau_project/custom/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'dart:convert';
@@ -25,7 +27,7 @@ class _GiftBoxWebViewState extends State<GiftBoxWebView> {
       }
 
       final data = jsonDecode(cleanedResult);
-      print("✅ بيانات المستخدم: $data");
+      print("✅User's Data: $data");
 
       final response = await http.post(
         Uri.parse("http://192.168.88.100:5000/api/box/saveBoxChoice"),
@@ -34,11 +36,15 @@ class _GiftBoxWebViewState extends State<GiftBoxWebView> {
       );
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(
+        ScaffoldMessenger.of(context);
+        // ).showSnackBar(SnackBar(content: Text("✅ Saved Successfully!")));
+        // ✅ NEW: Navigate to CardImage page after saving
+        Navigator.push(
           context,
-        ).showSnackBar(SnackBar(content: Text("✅ تم الحفظ في MongoDB!")));
+          MaterialPageRoute(builder: (context) => ChoosingCardForGift()),
+        );
       } else {
-        print("❌ خطأ: ${response.body}");
+        print("❌ Wrong: ${response.body}");
       }
     } catch (e) {
       print("❌ Exception: $e");
@@ -49,16 +55,29 @@ class _GiftBoxWebViewState extends State<GiftBoxWebView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('عرض صندوق الهدية ثلاثي الأبعاد'),
+        backgroundColor: Colors.white, // Set background to white
+        foregroundColor: Colors.black, // Set text and icons to black
+        title: Text(
+          '3D Gift Box Viewer',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: FlutterFlowTheme.of(context)?.titleMedium?.fontSize ?? 20,
+          ),
+        ),
+
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.save),
-            tooltip: "احفظ اختياراتي",
+            icon: const Icon(
+              Icons.save,
+              color: Colors.black,
+            ), // Icon color black
+            tooltip: "Save",
             onPressed: saveBoxSelection,
           ),
         ],
       ),
+
       body: Column(
         children: [
           Expanded(
@@ -86,12 +105,22 @@ class _GiftBoxWebViewState extends State<GiftBoxWebView> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: saveBoxSelection,
-                icon: Icon(Icons.save),
-                label: Text("احفظ اختياراتي"),
+                icon: const Icon(
+                  Icons.save,
+                  color: Colors.white,
+                ), // ensure icon is white too
+                label: Text(
+                  "Save and Continue",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize:
+                        FlutterFlowTheme.of(context)?.titleMedium?.fontSize ??
+                        16,
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  textStyle: TextStyle(fontSize: 18),
+                  backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
             ),

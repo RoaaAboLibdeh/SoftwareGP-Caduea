@@ -69,3 +69,6 @@ app.use('/api/favorites', favoriteRoutes);
 ///for box
 const boxRoutes = require('./routes/boxRoutes');
 app.use('/api/box', boxRoutes);
+
+const orderRoutes = require('./routes/orderRoutes');
+app.use('/api/orders', orderRoutes);
