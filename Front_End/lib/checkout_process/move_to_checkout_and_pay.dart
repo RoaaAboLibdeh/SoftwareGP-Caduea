@@ -1,16 +1,27 @@
 import 'package:cadeau_project/checkout_screen_map.dart/checkout_screen.dart';
 import 'package:cadeau_project/home_page_payment.dart';
+import 'package:cadeau_project/models/userCart_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 class MoveToCheckoutAndPay extends StatefulWidget {
   final String userId;
-  final double totalAmount;
+  final List<CartItem> cartItems;
+  final double subtotal;
+  final double shipping;
+  final double total;
+  final Map<String, dynamic> giftBoxData;
+  final Map<String, dynamic> giftCardData;
 
   const MoveToCheckoutAndPay({
     super.key,
     required this.userId,
-    required this.totalAmount,
+    required this.cartItems,
+    required this.subtotal,
+    required this.shipping,
+    required this.total,
+    required this.giftBoxData,
+    required this.giftCardData,
   });
 
   @override
@@ -126,8 +137,8 @@ class _MoveToCheckoutAndPayState extends State<MoveToCheckoutAndPay>
             title: const Text('Payment Scheduled'),
             content: Text(
               _selectedOption == 0
-                  ? 'Your cash payment of \$${widget.totalAmount.toStringAsFixed(2)} will be collected upon delivery'
-                  : 'Please visit our store to complete your payment of \$${widget.totalAmount.toStringAsFixed(2)}',
+                  ? 'Your cash payment of \$${widget.total.toStringAsFixed(2)} will be collected upon delivery'
+                  : 'Please visit our store to complete your payment of \$${widget.total.toStringAsFixed(2)}',
             ),
             actions: [
               TextButton(
@@ -150,9 +161,21 @@ class _MoveToCheckoutAndPayState extends State<MoveToCheckoutAndPay>
   void _navigateToMapPage() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => CheckoutScreen()), //move to map
+      MaterialPageRoute(
+        builder:
+            (_) => CheckoutScreen(
+              userId: widget.userId,
+              cartItems: widget.cartItems,
+              subtotal: widget.subtotal,
+              shipping: widget.shipping,
+              total: widget.total,
+              giftBoxData: widget.giftBoxData,
+              giftCardData: widget.giftCardData,
+              paymentMethod:
+                  _selectedOption == 0 ? 'Pay in Store' : 'Pay with Cash',
+            ),
+      ),
     );
-    // Navigator.push(context, MaterialPageRoute(builder: (_) => CardPaymentScreen()));
   }
 
   @override
@@ -262,7 +285,7 @@ class _MoveToCheckoutAndPayState extends State<MoveToCheckoutAndPay>
                         ),
                       ),
                       Text(
-                        '\$${widget.totalAmount.toStringAsFixed(2)}',
+                        '\$${widget.total.toStringAsFixed(2)}',
                         style: theme.textTheme.titleLarge?.copyWith(
                           color: Colors.grey.shade900,
                           fontWeight: FontWeight.w700,

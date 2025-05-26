@@ -1,5 +1,6 @@
 import 'package:cadeau_project/custom/theme.dart';
 import 'package:cadeau_project/home_page_payment.dart';
+import 'package:cadeau_project/models/userCart_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -8,6 +9,27 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class CheckoutScreen extends StatefulWidget {
+  final String userId;
+  final List<CartItem> cartItems;
+  final double subtotal;
+  final double shipping;
+  final double total;
+  final Map<String, dynamic> giftBoxData;
+  final Map<String, dynamic> giftCardData;
+  final String paymentMethod;
+
+  const CheckoutScreen({
+    Key? key,
+    required this.userId,
+    required this.cartItems,
+    required this.subtotal,
+    required this.shipping,
+    required this.total,
+    required this.giftBoxData,
+    required this.giftCardData,
+    required this.paymentMethod,
+  }) : super(key: key);
+
   @override
   _CheckoutScreenState createState() => _CheckoutScreenState();
 }
@@ -19,6 +41,62 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final String _geoapifyApiKey = '0809d2de7b584f37951e1ab0c9024317';
 
   final MapController _mapController = MapController();
+
+  // Add a method to create the order:
+  Future<void> _createOrder() async {
+    try {
+      final orderData = {
+        'userId': widget.userId,
+        'items':
+            widget.cartItems
+                .map(
+                  (item) => {
+                    'productId': item.product.id,
+                    'name': item.product.name,
+                    'price': item.product.price,
+                    'quantity': item.quantity,
+                    'imageUrl':
+                        item.product.imageUrls.isNotEmpty
+                            ? item.product.imageUrls[0]
+                            : '',
+                  },
+                )
+                .toList(),
+        'giftBox': widget.giftBoxData,
+        'giftCard': widget.giftCardData,
+        'deliveryDetails': {
+          'address': _address,
+          'latitude': _currentLocation?.latitude,
+          'longitude': _currentLocation?.longitude,
+        },
+        'paymentMethod': widget.paymentMethod,
+        'totalAmount': widget.total,
+        'status': 'pending',
+      };
+
+      final response = await http.post(
+        Uri.parse('http://192.168.88.100:5000/api/orders/create'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(orderData),
+      );
+
+      if (response.statusCode == 201) {
+        // Order created successfully
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomePagePayment()),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to create order')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
 
   @override
   void initState() {
@@ -192,7 +270,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           height: 50,
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
+              await _createOrder();
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => HomePagePayment()),

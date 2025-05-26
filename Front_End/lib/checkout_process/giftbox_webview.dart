@@ -1,11 +1,26 @@
 import 'package:cadeau_project/chosing_card_images/choosing_Card_for_Gift.dart';
 import 'package:cadeau_project/custom/theme.dart';
+import 'package:cadeau_project/models/userCart_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class GiftBoxWebView extends StatefulWidget {
+  final String userId;
+  final List<CartItem> cartItems;
+  final double subtotal;
+  final double shipping;
+  final double total;
+
+  const GiftBoxWebView({
+    Key? key,
+    required this.userId,
+    required this.cartItems,
+    required this.subtotal,
+    required this.shipping,
+    required this.total,
+  }) : super(key: key);
   @override
   _GiftBoxWebViewState createState() => _GiftBoxWebViewState();
 }
@@ -32,7 +47,7 @@ class _GiftBoxWebViewState extends State<GiftBoxWebView> {
       final response = await http.post(
         Uri.parse("http://192.168.88.100:5000/api/box/saveBoxChoice"),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"userId": "noor123", ...data}),
+        body: jsonEncode({"userId": widget.userId, ...data}),
       );
 
       if (response.statusCode == 200) {
@@ -41,7 +56,17 @@ class _GiftBoxWebViewState extends State<GiftBoxWebView> {
         // ✅ NEW: Navigate to CardImage page after saving
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ChoosingCardForGift()),
+          MaterialPageRoute(
+            builder:
+                (context) => ChoosingCardForGift(
+                  userId: widget.userId,
+                  cartItems: widget.cartItems,
+                  subtotal: widget.subtotal,
+                  shipping: widget.shipping,
+                  total: widget.total,
+                  giftBoxData: data,
+                ),
+          ),
         );
       } else {
         print("❌ Wrong: ${response.body}");

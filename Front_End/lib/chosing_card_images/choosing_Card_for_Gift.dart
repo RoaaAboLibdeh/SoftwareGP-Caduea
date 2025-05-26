@@ -1,9 +1,25 @@
 import 'package:cadeau_project/checkout_process/move_to_checkout_and_pay.dart';
+import 'package:cadeau_project/checkout_screen_map.dart/checkout_screen.dart';
+import 'package:cadeau_project/models/userCart_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class ChoosingCardForGift extends StatefulWidget {
-  const ChoosingCardForGift({super.key});
+  final String userId;
+  final List<CartItem> cartItems;
+  final double subtotal;
+  final double shipping;
+  final double total;
+  final Map<String, dynamic> giftBoxData;
+  const ChoosingCardForGift({
+    super.key,
+    required this.userId,
+    required this.cartItems,
+    required this.subtotal,
+    required this.shipping,
+    required this.total,
+    required this.giftBoxData,
+  });
 
   @override
   State<ChoosingCardForGift> createState() => _ChoosingCardForGiftState();
@@ -37,13 +53,13 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 251, 251, 251),
+      backgroundColor: const Color(0xFFF7F8FA),
       appBar: AppBar(
         title: const Text('Create Your Gift Card'),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: theme.colorScheme.primary,
+        foregroundColor: Colors.white,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
       body: SingleChildScrollView(
@@ -64,7 +80,7 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
               Text(
                 'Make your gift extra special with a custom card.',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.black,
+                  color: Colors.black54,
                 ),
               ),
               const SizedBox(height: 30),
@@ -117,7 +133,7 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
                             color:
                                 isSelected
                                     ? theme.colorScheme.primary
-                                    : const Color.fromARGB(255, 255, 253, 253)!,
+                                    : Colors.grey[300]!,
                             width: isSelected ? 3 : 1,
                           ),
                           boxShadow: [
@@ -145,13 +161,32 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
               OutlinedButton.icon(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    _showPreviewDialog();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => MoveToCheckoutAndPay(
+                              userId: widget.userId,
+                              cartItems: widget.cartItems,
+                              subtotal: widget.subtotal,
+                              shipping: widget.shipping,
+                              total: widget.total,
+                              giftBoxData: widget.giftBoxData,
+                              giftCardData: {
+                                'cardImage': _cardImages[_selectedCardIndex],
+                                'senderName': _nameController.text,
+                                'recipientName': _recipientController.text,
+                                'message': _messageController.text,
+                              },
+                            ),
+                      ),
+                    );
                   }
                 },
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 icon: const Icon(Icons.visibility),
@@ -164,21 +199,20 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
 
               ElevatedButton.icon(
                 onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _submitCard();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MoveToCheckoutAndPay(),
-                      ),
-                    );
-                  }
+                  // if (_formKey.currentState!.validate()) {
+                  //   _submitCard();
+                  // }
+
+                  //   Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(builder: (context) => CheckoutScreen()),
+                  //   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
+                  backgroundColor: theme.colorScheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 icon: const Icon(Icons.check_circle_outline),
@@ -295,7 +329,6 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
                   ElevatedButton(
                     onPressed: () => Navigator.pop(context),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 137, 27, 27),
                       minimumSize: const Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),

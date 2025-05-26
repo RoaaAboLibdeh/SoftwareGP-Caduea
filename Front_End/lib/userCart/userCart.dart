@@ -224,7 +224,12 @@ class _CartWidgetState extends State<CartWidget> {
                               ),
                     ),
                     if (cart.items.isNotEmpty)
-                      _buildCheckoutCard(subtotal, shipping, total),
+                      _buildCheckoutCard(
+                        subtotal,
+                        shipping,
+                        total,
+                        snapshot.data!.items,
+                      ),
                   ],
                 ),
               );
@@ -444,7 +449,12 @@ class _CartWidgetState extends State<CartWidget> {
     );
   }
 
-  Widget _buildCheckoutCard(double subtotal, double shipping, double total) {
+  Widget _buildCheckoutCard(
+    double subtotal,
+    double shipping,
+    double total,
+    List<CartItem> cartItems,
+  ) {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -510,7 +520,16 @@ class _CartWidgetState extends State<CartWidget> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => GiftBoxWebView()),
+                MaterialPageRoute(
+                  builder:
+                      (context) => GiftBoxWebView(
+                        userId: widget.userId,
+                        cartItems: cartItems, // Pass cart items
+                        subtotal: subtotal,
+                        shipping: shipping,
+                        total: total,
+                      ),
+                ),
               );
             },
             style: ElevatedButton.styleFrom(
@@ -522,7 +541,7 @@ class _CartWidgetState extends State<CartWidget> {
               minimumSize: Size(double.infinity, 50),
             ),
             child: Text(
-              'Choose the gift box',
+              'Choose your gift box',
               style: TextStyle(
                 color: Colors.white,
                 fontSize:
@@ -530,58 +549,6 @@ class _CartWidgetState extends State<CartWidget> {
               ),
             ),
           ),
-          // ElevatedButton(
-          //   onPressed: () {
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(builder: (context) => GiftBoxWebView()),
-          //     );
-          //   },
-
-          //   style: ElevatedButton.styleFrom(
-          //     backgroundColor:
-          //         FlutterFlowTheme.of(context)?.primary ??
-          //         const Color.fromARGB(255, 243, 103, 33),
-          //     shape: RoundedRectangleBorder(
-          //       borderRadius: BorderRadius.circular(12),
-          //     ),
-          //     minimumSize: Size(double.infinity, 50),
-          //   ),
-          //   child: Text(
-          //     'Proceed to choose your card',
-          //     style: TextStyle(
-          //       color: Colors.white,
-          //       fontSize:
-          //           FlutterFlowTheme.of(context)?.titleMedium?.fontSize ?? 16,
-          //     ),
-          //   ),
-          // ),
-          // ElevatedButton(
-          //   onPressed: () {
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(builder: (context) => ChoosingCardForGift()),
-          //     );
-          //   },
-
-          //   style: ElevatedButton.styleFrom(
-          //     backgroundColor:
-          //         FlutterFlowTheme.of(context)?.primary ??
-          //         const Color.fromARGB(255, 243, 103, 33),
-          //     shape: RoundedRectangleBorder(
-          //       borderRadius: BorderRadius.circular(12),
-          //     ),
-          //     minimumSize: Size(double.infinity, 50),
-          //   ),
-          //   child: Text(
-          //     'Proceed to choose your card image',
-          //     style: TextStyle(
-          //       color: Colors.white,
-          //       fontSize:
-          //           FlutterFlowTheme.of(context)?.titleMedium?.fontSize ?? 16,
-          //     ),
-          //   ),
-          // ),
         ],
       ),
     );

@@ -947,19 +947,21 @@ class _userHomePageState extends State<userHomePage> {
                           (context) => CategoriesPage(userId: widget.userId),
                     ),
                   );
-                } else if (index == 2) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => CheckoutScreen()),
-                  );
-                } else if (index == 3) {
+                }
+                // } else if (index == 2) {
+                //   Navigator.pushReplacement(
+                //     context,
+                //     MaterialPageRoute(builder: (context) => CheckoutScreen()),
+                //   );
+                // }
+                else if (index == 2) {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                       builder: (context) => CartWidget(userId: widget.userId),
                     ),
                   );
-                } else if (index == 4) {
+                } else if (index == 3) {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
