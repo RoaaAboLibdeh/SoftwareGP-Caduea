@@ -2,11 +2,13 @@ class ChatMessage {
   final String text;
   final bool isAvatar;
   final DateTime timestamp;
+  final bool isProductRecommendation;
 
   ChatMessage({
     required this.text,
     required this.isAvatar,
     required this.timestamp,
+    this.isProductRecommendation = false,
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
@@ -14,6 +16,7 @@ class ChatMessage {
       text: json['text'],
       isAvatar: json['isAvatar'],
       timestamp: DateTime.parse(json['timestamp']),
+      isProductRecommendation: json['isProductRecommendation'] ?? false,
     );
   }
 
@@ -22,6 +25,7 @@ class ChatMessage {
       'text': text,
       'isAvatar': isAvatar,
       'timestamp': timestamp.toIso8601String(),
+      'isProductRecommendation': isProductRecommendation,
     };
   }
 }

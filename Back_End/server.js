@@ -7,11 +7,12 @@ const ownerRoutes = require('./routes/ownerRoutes');
 const productsRoutes = require('./routes/productRoutes');
 const path = require('path');
 const cartRoutes = require('./routes/cartRoutes');
-
+const chatRoutes = require('./routes/chat');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.use('/api', chatRoutes); // 👈 This enables /api/chat
 
 // Connect to MongoDB
 console.log("MongoDB URI:", process.env.MONGO_URI);

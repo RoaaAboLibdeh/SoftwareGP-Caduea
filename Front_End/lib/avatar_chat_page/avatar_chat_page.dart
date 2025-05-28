@@ -1,13 +1,17 @@
+import 'package:cadeau_project/product/ProductDetailsForUser/ProductDetailsForUser.dart';
 import 'package:flutter/material.dart';
 import 'package:avatar_plus/avatar_plus.dart';
 import 'package:cadeau_project/custom/theme.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import 'chat_message.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class AvatarChatPage extends StatefulWidget {
-  final String avatarCode; // Original avatar code for display
-  final String avatarName; // Friendly display name
+  final String avatarCode;
+  final String avatarName;
   final String userId;
   final String userName;
 
@@ -29,6 +33,13 @@ class _AvatarChatPageState extends State<AvatarChatPage> {
   final ScrollController _scrollController = ScrollController();
   bool _isAvatarTyping = false;
   late ApiService _apiService;
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -48,16 +59,20 @@ class _AvatarChatPageState extends State<AvatarChatPage> {
 
   void _addWelcomeMessage() {
     _addAvatarMessage(
-      "Hello ${widget.userName}! I'm ${widget.avatarName}, your shopping assistant. How can I help you today?",
+      "Hello ${widget.userName}! I'm ${widget.avatarName}, your personal gift assistant. 🎁\n\nI can help you find the perfect gift for any occasion. Tell me who you're shopping for and I'll suggest wonderful options!",
     );
   }
 
-  void _addAvatarMessage(String text) {
+  void _addAvatarMessage(String text, {bool isProductRecommendation = false}) {
     setState(() {
       _messages.add(
-        ChatMessage(text: text, isAvatar: true, timestamp: DateTime.now()),
+        ChatMessage(
+          text: text,
+          isAvatar: true,
+          timestamp: DateTime.now(),
+          isProductRecommendation: isProductRecommendation,
+        ),
       );
-      _isAvatarTyping = false;
     });
     _scrollToBottom();
   }
@@ -65,25 +80,73 @@ class _AvatarChatPageState extends State<AvatarChatPage> {
   void _sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
 
-    // Add user message
-    final userMessage = ChatMessage(
-      text: _messageController.text,
-      isAvatar: false,
-      timestamp: DateTime.now(),
-    );
-    setState(() => _messages.add(userMessage));
-    _scrollToBottom();
+    final userMessage = _messageController.text;
     _messageController.clear();
+
+    // Add user message
+    setState(
+      () => _messages.add(
+        ChatMessage(
+          text: userMessage,
+          isAvatar: false,
+          timestamp: DateTime.now(),
+        ),
+      ),
+    );
+    _scrollToBottom();
 
     // Show typing indicator
     setState(() => _isAvatarTyping = true);
 
-    // Get API response
-    final response = await _apiService.getAvatarResponse(
-      userMessage.text,
-      _messages,
-    );
-    _addAvatarMessage(response);
+    try {
+      // Get API response
+      final response = await _apiService.getAvatarResponse(
+        userMessage,
+        _messages,
+      );
+      _addAvatarMessage(response);
+    } catch (e) {
+      _addAvatarMessage("Oops! Something went wrong. Please try again later.");
+    }
+  }
+
+  Future<void> sendMessageToBot(String userMessage) async {
+    if (userMessage.trim().isEmpty) return;
+
+    setState(() {
+      _messages.add(
+        ChatMessage(
+          text: userMessage,
+          isAvatar: false,
+          timestamp: DateTime.now(),
+        ),
+      );
+    });
+    _scrollToBottom();
+
+    try {
+      setState(() => _isAvatarTyping = true);
+
+      final response = await http.post(
+        Uri.parse('http://192.168.88.100:5000/api/chat'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'message': userMessage}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        _addAvatarMessage(
+          data['message'],
+          isProductRecommendation: data['isProductRecommendation'] ?? false,
+        );
+      } else {
+        throw Exception('Failed to get response from server');
+      }
+    } catch (e) {
+      _addAvatarMessage("Oops! I couldn't connect to the gift assistant.");
+    } finally {
+      setState(() => _isAvatarTyping = false);
+    }
   }
 
   void _scrollToBottom() {
@@ -98,6 +161,16 @@ class _AvatarChatPageState extends State<AvatarChatPage> {
     });
   }
 
+  void _launchURL(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not launch $url')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,18 +180,14 @@ class _AvatarChatPageState extends State<AvatarChatPage> {
             Container(
               width: 32,
               height: 32,
-              child: AvatarPlus(
-                widget.avatarCode, // Use the original code for avatar display
-                width: 32,
-                height: 32,
-              ),
+              child: AvatarPlus(widget.avatarCode, width: 32, height: 32),
             ),
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.avatarName, // Display friendly name
+                  widget.avatarName,
                   style: FlutterFlowTheme.of(context).titleSmall.override(
                     fontFamily: 'Outfit',
                     color: Colors.white,
@@ -164,12 +233,20 @@ class _AvatarChatPageState extends State<AvatarChatPage> {
                 itemBuilder: (context, index) {
                   if (index < _messages.length) {
                     final message = _messages[index];
-                    return ChatBubble(
-                      message: message.text,
-                      isAvatar: message.isAvatar,
-                      avatarCode: widget.avatarCode,
-                      avatarName: widget.avatarName, // Use friendly name
-                    );
+                    return message.isProductRecommendation
+                        ? ProductRecommendationBubble(
+                          message: message.text,
+                          avatarCode: widget.avatarCode,
+                          avatarName: widget.avatarName,
+                          onProductTap: _launchURL,
+                          userId: widget.userId,
+                        )
+                        : ChatBubble(
+                          message: message.text,
+                          isAvatar: message.isAvatar,
+                          avatarCode: widget.avatarCode,
+                          avatarName: widget.avatarName,
+                        );
                   } else {
                     return const Padding(
                       padding: EdgeInsets.only(left: 16, top: 8, bottom: 16),
@@ -212,13 +289,15 @@ class _AvatarChatPageState extends State<AvatarChatPage> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: TextField(
-                      controller: _messageController,
+                      controller: _controller,
+                      onSubmitted: (text) {
+                        sendMessageToBot(text);
+                        _controller.clear();
+                      },
                       decoration: InputDecoration(
-                        hintText: "Type a message...",
-                        border: InputBorder.none,
-                        hintStyle: TextStyle(color: Colors.grey[500]),
+                        hintText: 'Ask for a gift idea...',
+                        border: OutlineInputBorder(),
                       ),
-                      onSubmitted: (_) => _sendMessage(),
                     ),
                   ),
                   IconButton(
@@ -245,18 +324,6 @@ class _AvatarChatPageState extends State<AvatarChatPage> {
     );
   }
 }
-
-// class ChatMessage {
-//   final String text;
-//   final bool isAvatar;
-//   final DateTime timestamp;
-
-//   ChatMessage({
-//     required this.text,
-//     required this.isAvatar,
-//     required this.timestamp,
-//   });
-// }
 
 class ChatBubble extends StatelessWidget {
   final String message;
@@ -325,6 +392,292 @@ class ChatBubble extends StatelessWidget {
           if (!isAvatar) const SizedBox(width: 36),
         ],
       ),
+    );
+  }
+}
+
+class ProductRecommendationBubble extends StatelessWidget {
+  final String message;
+  final String avatarName;
+  final String avatarCode;
+  final String userId; // Add userId parameter
+  final Function(String) onProductTap;
+
+  const ProductRecommendationBubble({
+    super.key,
+    required this.message,
+    required this.avatarName,
+    required this.avatarCode,
+    required this.onProductTap,
+    required this.userId, // Add this
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Parse the message to extract product information
+    final products = _parseProductRecommendations(message);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            child: AvatarPlus(avatarCode, width: 36, height: 36),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // The introductory message
+                      if (message.contains('\n'))
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            message.substring(0, message.indexOf('\n')),
+                            style: const TextStyle(color: Colors.black87),
+                          ),
+                        ),
+
+                      // Product cards
+                      ...products.map(
+                        (product) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => ProductDetailsWidget(
+                                        product: product,
+                                        userId: userId, // Pass userId here
+                                      ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (product.imageUrl != null)
+                                    ClipRRect(
+                                      borderRadius: const BorderRadius.vertical(
+                                        top: Radius.circular(12),
+                                      ),
+                                      child: Image.network(
+                                        product.imageUrl!,
+                                        height: 120,
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                Container(
+                                                  height: 120,
+                                                  color: Colors.grey[200],
+                                                  child: const Icon(
+                                                    Icons.image,
+                                                  ),
+                                                ),
+                                      ),
+                                    ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          product.name,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        if (product.price != null)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 4,
+                                            ),
+                                            child: Text(
+                                              product.price!,
+                                              style: TextStyle(
+                                                color: Colors.green[700],
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        if (product.description != null)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 8,
+                                            ),
+                                            child: Text(
+                                              product.description!,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.black54,
+                                              ),
+                                            ),
+                                          ),
+                                        if (product.url != null)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 8,
+                                            ),
+                                            child: GestureDetector(
+                                              onTap:
+                                                  () => onProductTap(
+                                                    product.url!,
+                                                  ),
+                                              child: Text(
+                                                'View Product',
+                                                style: TextStyle(
+                                                  color:
+                                                      Theme.of(
+                                                        context,
+                                                      ).primaryColor,
+                                                  decoration:
+                                                      TextDecoration.underline,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  avatarName,
+                  style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<ProductInfo> _parseProductRecommendations(String message) {
+    final products = <ProductInfo>[];
+    final lines = message.split('\n');
+
+    ProductInfo? currentProduct;
+    String? currentSection;
+
+    for (final line in lines) {
+      // Check for product header (e.g., "1. **Product Name** ($price)")
+      final productHeaderMatch = RegExp(
+        r'^\d+\. \*\*(.+?)\*\* \((.+?)\)',
+      ).firstMatch(line);
+      if (productHeaderMatch != null) {
+        // Save previous product if exists
+        if (currentProduct != null) {
+          products.add(currentProduct);
+        }
+
+        currentProduct = ProductInfo(
+          name: productHeaderMatch.group(1)!,
+          price: productHeaderMatch.group(2),
+        );
+        currentSection = 'header';
+        continue;
+      }
+
+      // Check for image URL
+      final imageMatch = RegExp(r'!\[Image\]\((.+?)\)').firstMatch(line);
+      if (imageMatch != null && currentProduct != null) {
+        currentProduct = currentProduct.copyWith(imageUrl: imageMatch.group(1));
+        continue;
+      }
+
+      // Check for product URL
+      final urlMatch = RegExp(r'\[View Product\]\((.+?)\)').firstMatch(line);
+      if (urlMatch != null && currentProduct != null) {
+        currentProduct = currentProduct.copyWith(url: urlMatch.group(1));
+        continue;
+      }
+
+      // Handle description (lines that don't match any other pattern)
+      if (currentProduct != null &&
+          line.trim().isNotEmpty &&
+          !line.startsWith('!') &&
+          !line.startsWith('[') &&
+          currentSection == 'header') {
+        currentProduct = currentProduct.copyWith(description: line.trim());
+      }
+    }
+
+    // Add the last product if exists
+    if (currentProduct != null) {
+      products.add(currentProduct);
+    }
+
+    return products;
+  }
+}
+
+class ProductInfo {
+  final String name;
+  final String? price;
+  final String? description;
+  final String? url;
+  final String? imageUrl;
+
+  ProductInfo({
+    required this.name,
+    this.price,
+    this.description,
+    this.url,
+    this.imageUrl,
+  });
+
+  // Add this copyWith method
+  ProductInfo copyWith({
+    String? name,
+    String? price,
+    String? description,
+    String? url,
+    String? imageUrl,
+  }) {
+    return ProductInfo(
+      name: name ?? this.name,
+      price: price ?? this.price,
+      description: description ?? this.description,
+      url: url ?? this.url,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 }

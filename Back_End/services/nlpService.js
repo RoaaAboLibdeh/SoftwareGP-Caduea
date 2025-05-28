@@ -3,6 +3,7 @@ const classifier = new natural.BayesClassifier();
 const Product = require('../models/Product');
 
 // ====================== TRAINING DATA ======================
+
 // Recipient-based training
 const recipientTraining = [
   { text: 'gift for mom', label: 'gift.suggestion.mother' },
@@ -135,8 +136,18 @@ const socialTraining = [
   { text: 'hi', label: 'greeting' },
   { text: 'hello', label: 'greeting' },
   { text: 'hey', label: 'greeting' },
+  { text: 'hi there', label: 'greeting' },
+  { text: 'hello!', label: 'greeting' },
+  { text: 'good morning', label: 'greeting' },
+  { text: 'good afternoon', label: 'greeting' },
+  { text: 'greetings', label: 'greeting' },
+  { text: 'howdy', label: 'greeting' },
   { text: 'thank you', label: 'appreciation' },
-  { text: 'thanks', label: 'appreciation' }
+  { text: 'thanks', label: 'appreciation' },
+  { text: 'thank you!', label: 'appreciation' },
+  { text: 'thanks!', label: 'appreciation' },
+  { text: 'appreciate it', label: 'appreciation' },
+  { text: 'many thanks', label: 'appreciation' }
 ];
 
 // Combine all training data
@@ -151,90 +162,240 @@ const allTraining = [
 ];
 
 // Add to classifier
-allTraining.forEach(item => {
-  classifier.addDocument(item.text, item.label);
-});
+try {
+  allTraining.forEach(item => {
+    classifier.addDocument(item.text, item.label);
+  });
+  
+  // Train the classifier
+  classifier.train();
+  
+  console.log('Classifier trained successfully with', allTraining.length, 'examples');
+  
+  // Test basic classification
+  console.log('Test classification "hello":', classifier.classify('hello')); // Should return 'greeting'
+  console.log('Test classification "gift for mom":', classifier.classify('gift for mom')); // Should return 'gift.suggestion.mother'
+} catch (error) {
+  console.error('Error during classifier training:', error);
+  throw error; // Fail fast during initialization
+}
 
-// Train the classifier
-classifier.train();
+// ====================== ENHANCED CLASSIFICATION ======================
+function classifyMessage(message) {
+  try {
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return 'unknown';
+    }
+    
+    const result = classifier.classify(message.toLowerCase());
+    console.log(`Classified "${message}" as:`, result); // Debug logging
+    
+    // Fallback for unknown messages
+    return result !== 'none' ? result : 'unknown';
+  } catch (error) {
+    console.error('Classification error:', error);
+    return 'unknown';
+  }
+}
+
+// ====================== SIMPLE RESPONSE GENERATION ======================
+function generateSimpleResponse(intent) {
+  const responses = {
+    'greeting': [
+      "Hello there! How can I help you find the perfect gift today?",
+      "Hi! I'm your gift assistant. Who are you shopping for?",
+      "Welcome! Let's find a wonderful gift together."
+    ],
+    'appreciation': [
+      "You're welcome! Happy to help!",
+      "My pleasure! Let me know if you need more suggestions.",
+      "Glad I could help!"
+    ],
+    'unknown': [
+      "I'm not sure I understand. Could you tell me more about who you're shopping for?",
+      "I'd love to help with gift ideas! Who is the gift for?",
+      "Let's find a great gift! Could you tell me more about the occasion?"
+    ]
+  };
+ // Add basic gift responses
+  if (intent.startsWith('gift.suggestion.')) {
+    return "I have some great gift ideas for you! Let me check...";
+  }
+
+  const category = intent.split('.')[0];
+  const availableResponses = responses[category] || responses.unknown;
+  return availableResponses[Math.floor(Math.random() * availableResponses.length)];
+}
+
+// ====================== MAIN PROCESSING FUNCTION ======================
+async function processMessage(message) {
+  try {
+    // Step 1: Classify the message
+    const intent = classifyMessage(message);
+    
+    // Step 2: Generate appropriate response
+    const response = generateSimpleResponse(intent);
+    
+    return {
+      success: true,
+      intent,
+      response
+    };
+  } catch (error) {
+    console.error('Error processing message:', error);
+    return {
+      success: false,
+      error: 'Sorry, I encountered an error. Please try again.'
+    };
+  }
+}
+
+function levenshteinDistance(a, b) {
+  const matrix = Array.from({ length: b.length + 1 }, (_, i) => [i]);
+  for (let i = 0; i <= a.length; i++) matrix[0][i] = i;
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      const cost = a[j - 1] === b[i - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,     // deletion
+        matrix[i][j - 1] + 1,     // insertion
+        matrix[i - 1][j - 1] + cost // substitution
+      );
+    }
+  }
+
+  return matrix[b.length][a.length];
+}
 
 // ====================== ENTITY EXTRACTION ======================
 const giftEntities = {
-  recipient: ['mother', 'father', 'wife', 'husband', 'girlfriend', 'boyfriend', 'child', 'teen', 'friend', 'colleague'],
-  occasion: ['birthday', 'anniversary', 'wedding', 'valentine', 'christmas', 'graduation', 'mothers day', 'fathers day', 'just because'],
-  category: ['electronics', 'jewelry', 'home decor', 'fashion', 'toys', 'experiences', 'personalized', 'books', 'beauty'],
-  price: ['cheap', 'affordable', 'luxury', 'expensive', 'under 50', 'under 100']
+  recipient: ['mother', 'father', 'wife', 'husband', 'girlfriend', 'boyfriend', 'child', 'teen', 'friend', 'colleague', 'parents', 'grandparents', 'siblings'],
+  occasion: ['birthday', 'anniversary', 'wedding', 'valentine', 'christmas', 'graduation', 'mothers day', 'fathers day', 'just because', 'new year', 'baby shower'],
+  category: ['electronics', 'jewelry', 'home decor', 'fashion', 'toys', 'experiences', 'personalized', 'books', 'beauty', 'kitchen', 'fitness', 'travel'],
+  price: ['cheap', 'affordable', 'luxury', 'expensive', 'under 50', 'under 100', 'under 200', 'budget', 'premium']
 };
 
 function extractFiltersFromMessage(message) {
   const filters = {};
   const lowerMsg = message.toLowerCase();
 
-  // Price extraction
-  if (lowerMsg.includes('cheap') || lowerMsg.includes('inexpensive')) {
+  // Enhanced price extraction
+  if (lowerMsg.includes('cheap') || lowerMsg.includes('inexpensive') || lowerMsg.includes('low cost')) {
     filters.price = 'cheap';
     filters.maxPrice = 25;
-  } else if (lowerMsg.includes('affordable') || lowerMsg.includes('reasonable')) {
+  } else if (lowerMsg.includes('affordable') || lowerMsg.includes('reasonable') || lowerMsg.includes('mid-range')) {
     filters.price = 'affordable';
-    filters.maxPrice = 50;
-  } else if (lowerMsg.includes('luxury') || lowerMsg.includes('expensive')) {
+    filters.maxPrice = 100;
+  } else if (lowerMsg.includes('luxury') || lowerMsg.includes('expensive') || lowerMsg.includes('high-end') || lowerMsg.includes('premium')) {
     filters.price = 'luxury';
-    filters.minPrice = 100;
+    filters.minPrice = 200;
+  } else if (lowerMsg.includes('budget')) {
+    filters.price = 'cheap';
+    filters.maxPrice = 50;
   }
   
-  // Exact price extraction
-  const priceMatch = lowerMsg.match(/(under|below|less than) (\$|€|£)?(\d+)/);
+  // More robust exact price extraction
+  const priceMatch = lowerMsg.match(/(under|below|less than|up to|about|around) (\$|€|£)?(\d+)/);
   if (priceMatch) {
     filters.maxPrice = Number(priceMatch[3]);
   }
+  
+  const exactPriceMatch = lowerMsg.match(/(\$|€|£)?(\d+)(\s|-)?(dollars|usd|eur|euros|pounds)?/);
+  if (exactPriceMatch) {
+    filters.exactPrice = Number(exactPriceMatch[2]);
+  }
 
-  // Recipient extraction
+  // Improved recipient extraction with fuzzy matching
   giftEntities.recipient.forEach(recipient => {
-    if (lowerMsg.includes(recipient)) filters.recipient = recipient;
+    if (lowerMsg.includes(recipient) || 
+        levenshteinDistance(lowerMsg, recipient) <= 2) {
+      filters.recipient = recipient;
+    }
   });
 
-  // Occasion extraction
+  // Improved occasion extraction
   giftEntities.occasion.forEach(occasion => {
-    if (lowerMsg.includes(occasion)) filters.occasion = occasion;
+    if (lowerMsg.includes(occasion) || 
+        (occasion.includes(' ') && lowerMsg.includes(occasion.replace(' ', '')))) {
+      filters.occasion = occasion;
+    }
   });
 
-  // Category extraction
+  // Enhanced category extraction
   giftEntities.category.forEach(category => {
-    if (lowerMsg.includes(category)) filters.category = category;
+    if (lowerMsg.includes(category) || 
+        (category.includes(' ') && lowerMsg.includes(category.replace(' ', '')))) {
+      filters.category = category;
+    }
   });
 
-  // Keyword extraction (from product schema)
+  // More comprehensive keyword extraction
   const keywords = [];
-  if (lowerMsg.includes('watch') || lowerMsg.includes('smartwatch')) keywords.push('watch');
-  if (lowerMsg.includes('ring') || lowerMsg.includes('necklace')) keywords.push('jewelry');
-  if (lowerMsg.includes('book') || lowerMsg.includes('novel')) keywords.push('book');
-  if (keywords.length) filters.keywords = keywords;
+  const keywordMapping = {
+    'watch': ['watch', 'smartwatch', 'timepiece'],
+    'jewelry': ['ring', 'necklace', 'bracelet', 'earrings'],
+    'book': ['book', 'novel', 'textbook', 'reading'],
+    'electronics': ['tech', 'gadget', 'device', 'phone', 'tablet'],
+    'home': ['decor', 'furniture', 'cushion', 'lamp']
+  };
+  
+  Object.entries(keywordMapping).forEach(([category, terms]) => {
+    terms.forEach(term => {
+      if (lowerMsg.includes(term)) {
+        keywords.push(category);
+      }
+    });
+  });
+  
+  if (keywords.length) filters.keywords = [...new Set(keywords)];
 
   return filters;
 }
 
-// ====================== GIFT RECOMMENDATIONS ======================
+// ====================== ENHANCED GIFT RECOMMENDATIONS ======================
 async function getGiftRecommendations(filters) {
   const query = {};
   
   // Map filters to product schema fields
-  if (filters.recipient) query.recipientType = filters.recipient;
-  if (filters.occasion) query.occasion = filters.occasion;
-  if (filters.category) query.category = filters.category;
-  if (filters.keywords) query.$text = { $search: filters.keywords.join(' ') };
-  
-  // Price filtering
-  if (filters.maxPrice) {
-    query.price = { ...query.price, $lte: filters.maxPrice };
+  if (filters.recipient) {
+    query.recipientType = { $regex: filters.recipient, $options: 'i' };
   }
-  if (filters.minPrice) {
-    query.price = { ...query.price, $gte: filters.minPrice };
+  if (filters.occasion) {
+    query.occasion = { $regex: filters.occasion, $options: 'i' };
+  }
+  if (filters.category) {
+    query.category = { $regex: filters.category, $options: 'i' };
+  }
+  if (filters.keywords) {
+    query.$or = [
+      { name: { $regex: filters.keywords.join('|'), $options: 'i' } },
+      { description: { $regex: filters.keywords.join('|'), $options: 'i' } },
+      { keywords: { $in: filters.keywords } }
+    ];
+  }
+  
+  // Enhanced price filtering
+  if (filters.exactPrice) {
+    query.price = { $gte: filters.exactPrice * 0.9, $lte: filters.exactPrice * 1.1 };
+  } else {
+    if (filters.maxPrice) {
+      query.price = { ...query.price, $lte: filters.maxPrice };
+    }
+    if (filters.minPrice) {
+      query.price = { ...query.price, $gte: filters.minPrice };
+    }
   }
 
-  return await Product.find(query)
-    .sort({ popularity: -1 })
-    .limit(5)
-    .select('name price description productUrl imageUrls');
+  try {
+    return await Product.find(query)
+      .sort({ popularity: -1, price: 1 })
+      .limit(8)
+      .select('name price description productUrl imageUrls recipientType occasion category');
+  } catch (error) {
+    console.error('Error fetching gift recommendations:', error);
+    return [];
+  }
 }
 
 // ====================== RESPONSE GENERATION ======================
@@ -242,19 +403,19 @@ async function generateResponse(intent, filters, products) {
   // Cute responses for social interactions
   const cuteResponses = {
     'greeting': [
-      "Hello there! *waves* How can I help you find the perfect gift today?",
-      "Hi friend! *smiles* Looking for gift ideas? I'd love to help!",
-      "Hiiii! *excited* Ready to find something special for someone special?"
+      "Hello there! *waves* I'm your gift expert. Tell me who you're shopping for and I'll suggest perfect gifts!",
+      "Hi friend! *smiles* Let's find an amazing gift together. Who's the lucky recipient?",
+      "Hiiii! *excited* I love helping with gifts! What's the occasion we're shopping for?"
     ],
     'appreciation': [
-      "You're so welcome! *happy dance* It was my pleasure to help!",
-      "Aww, thanks! *blushes* Let me know if you need more recommendations!",
-      "My pleasure! *beams* Happy gift-giving!"
+      "You're so welcome! *happy dance* Let me know if you need more help!",
+      "Aww, thanks! *blushes* I'm always happy to help with gift ideas!",
+      "My pleasure! *beams* Don't hesitate to ask if you need more suggestions!"
     ],
     'gift.help': [
-      "Of course! *claps* Let's find something wonderful together!",
-      "I'd love to help! *thinking* Tell me more about who it's for.",
-      "Yay! *excited* Gift shopping is my favorite! What's the occasion?"
+      "Of course! *claps* Tell me more about who we're shopping for!",
+      "I'd love to help! *thinking* What's the occasion and budget?",
+      "Yay! *excited* Gift shopping is my specialty! Who's the gift for?"
     ]
   };
 
@@ -263,32 +424,42 @@ async function generateResponse(intent, filters, products) {
     return cuteResponses[intent][Math.floor(Math.random() * cuteResponses[intent].length)];
   }
 
-  // Handle no products found
+  // Handle no products found with better fallback
   if (!products.length) {
     const fallbacks = [
-      "Hmm, I couldn't find perfect matches *thinking*, but here are some popular gifts:",
-      "Let me think... *taps chin* These might work well:",
-      "I searched high and low! *determined* Here are some great options:"
+      "Hmm, I couldn't find exact matches *thinking*, but here are some popular gifts that might work:",
+      "Let me think... *taps chin* While I couldn't find perfect matches, these are great options:",
+      "I searched thoroughly! *determined* Here are some excellent alternatives:"
     ];
-    const fallback = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+   const fallback = fallbacks[Math.floor(Math.random() * fallbacks.length)];
     
-    const popularProducts = await Product.find()
+    // Get popular products that might fit the filters
+    const fallbackQuery = {};
+    if (filters.recipient) fallbackQuery.recipientType = { $regex: filters.recipient, $options: 'i' };
+    if (filters.occasion) fallbackQuery.occasion = { $regex: filters.occasion, $options: 'i' };
+    
+    const popularProducts = await Product.find(fallbackQuery)
       .sort({ popularity: -1 })
-      .limit(3)
-      .select('name price productUrl');
+      .limit(5)
+      .select('name price productUrl imageUrls');
     
-    return fallback + "\n" + 
-      popularProducts.map(p => 
-        `- ${p.name} ($${p.price}) [View](${p.productUrl || '#'})`
-      ).join('\n');
+    if (popularProducts.length) {
+      return fallback + "\n" + 
+        popularProducts.map(p => 
+          `- ${p.name} ($${p.price}) [View](${p.productUrl || '#'})`
+        ).join('\n');
+    } else {
+      return "I couldn't find any matching gifts *sad face*. Could you tell me more about what you're looking for?";
+    }
   }
+
 
   // Recipient-specific responses
   const recipientResponses = {
     'mother': [
-      "For your amazing mom *heart* I recommend these thoughtful gifts:",
-      "Mothers deserve the best! *nod* Here are some wonderful options:",
-      "What a wonderful child you are! *smile* For your mom:"
+      "For your amazing mom *heart* here are thoughtful gifts she'll love:",
+      "Moms deserve the best! *nod* These would make her day special:",
+      "What a wonderful child you are! *smile* For your dear mom:"
     ],
     'father': [
       "For your awesome dad *thumbs up* These would make great gifts:",
@@ -340,9 +511,9 @@ async function generateResponse(intent, filters, products) {
   // Occasion-specific responses
   const occasionResponses = {
     'birthday': [
-      "For this special birthday *party* I recommend these:",
-      "Birthdays call for great gifts! *celebrate* Here are my picks:",
-      "Make their birthday extra special with these:"
+      "Birthdays are special! *party* Here are perfect gifts to celebrate:",
+      "Make their birthday unforgettable with these great options:",
+      "Birthday gifts that will bring smiles:"
     ],
     'anniversary': [
       "For your anniversary *heart* These romantic gifts would be perfect:",
@@ -386,14 +557,12 @@ async function generateResponse(intent, filters, products) {
     ]
   };
 
-  // Extract base intent parts
+  // Build response with more context
+  let response = "I found these great options for you:";
   const intentParts = intent.split('.');
   const recipient = intentParts.find(part => recipientResponses[part]);
   const occasion = intentParts.find(part => occasionResponses[part]);
 
-  // Build response
-  let response = "I found some great options for you:";
-  
   if (recipient && occasion) {
     const recipientRes = recipientResponses[recipient][Math.floor(Math.random() * recipientResponses[recipient].length)];
     const occasionRes = occasionResponses[occasion][Math.floor(Math.random() * occasionResponses[occasion].length)];
@@ -404,15 +573,24 @@ async function generateResponse(intent, filters, products) {
     response = occasionResponses[occasion][Math.floor(Math.random() * occasionResponses[occasion].length)];
   }
 
-  // Format products with links and images
+  // Format products with more details and better presentation
   return response + "\n" +
-    products.map(p => {
-      let productText = `- ${p.name} ($${p.price})`;
-      if (p.description) productText += `: ${p.description.substring(0, 60)}...`;
-      if (p.productUrl) productText += ` [View Product](${p.productUrl})`;
+    products.map((p, index) => {
+      let productText = `${index + 1}. **${p.name}** ($${p.price})`;
+      if (p.description) productText += `\n   ${p.description.substring(0, 80)}${p.description.length > 80 ? '...' : ''}`;
+      if (p.productUrl) productText += `\n   [View Product](${p.productUrl})`;
+      if (p.imageUrls && p.imageUrls.length) productText += `\n   ![Image](${p.imageUrls[0]})`;
       return productText;
-    }).join('\n');
+    }).join('\n\n');
 }
+
+module.exports = {
+  classify: classifier.classify.bind(classifier),
+    classify: classifyMessage,
+  extractFiltersFromMessage,
+  getGiftRecommendations,
+  generateResponse
+};
 
 // ====================== EXPORTS ======================
 module.exports = {
