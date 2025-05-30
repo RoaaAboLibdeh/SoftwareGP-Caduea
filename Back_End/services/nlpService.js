@@ -577,6 +577,8 @@ async function generateResponse(intent, filters, products) {
   return response + "\n" +
     products.map((p, index) => {
       let productText = `${index + 1}. **${p.name}** ($${p.price})`;
+      // Include product ID if available
+      if (p._id) productText += `\nid:${p._id}`;
       if (p.description) productText += `\n   ${p.description.substring(0, 80)}${p.description.length > 80 ? '...' : ''}`;
       if (p.productUrl) productText += `\n   [View Product](${p.productUrl})`;
       if (p.imageUrls && p.imageUrls.length) productText += `\n   ![Image](${p.imageUrls[0]})`;

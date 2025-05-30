@@ -1,3 +1,4 @@
+import 'package:cadeau_project/models/product_model.dart';
 import 'package:cadeau_project/product/ProductDetailsForUser/ProductDetailsForUser.dart';
 import 'package:flutter/material.dart';
 import 'package:avatar_plus/avatar_plus.dart';
@@ -250,7 +251,7 @@ class _AvatarChatPageState extends State<AvatarChatPage> {
                   } else {
                     return const Padding(
                       padding: EdgeInsets.only(left: 16, top: 8, bottom: 16),
-                      child: TypingIndicator(),
+                      // child: TypingIndicator(),
                     );
                   }
                 },
@@ -400,7 +401,7 @@ class ProductRecommendationBubble extends StatelessWidget {
   final String message;
   final String avatarName;
   final String avatarCode;
-  final String userId; // Add userId parameter
+  final String userId;
   final Function(String) onProductTap;
 
   const ProductRecommendationBubble({
@@ -409,7 +410,7 @@ class ProductRecommendationBubble extends StatelessWidget {
     required this.avatarName,
     required this.avatarCode,
     required this.onProductTap,
-    required this.userId, // Add this
+    required this.userId,
   });
 
   @override
@@ -457,12 +458,36 @@ class ProductRecommendationBubble extends StatelessWidget {
                           padding: const EdgeInsets.only(bottom: 12),
                           child: InkWell(
                             onTap: () {
+                              // Convert the parsed product info to a Product object
+                              final productModel = Product(
+                                id: product.id ?? 'default_id',
+                                name: product.name,
+                                description:
+                                    product.description ??
+                                    'No description available',
+                                price: _parsePrice(product.price ?? '0'),
+                                discountAmount: _parseDiscount(
+                                  product.price ?? '0',
+                                ),
+                                imageUrls:
+                                    product.imageUrl != null
+                                        ? [product.imageUrl!]
+                                        : [],
+                                recipientType: [],
+                                occasion: [],
+                                stock: 100, // Default stock value
+                                isOnSale:
+                                    product.price != null &&
+                                    product.price!.contains('\$'),
+                                category: 'General', // Default category
+                              );
+
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder:
                                       (context) => ProductDetailsWidget(
-                                        product: product,
-                                        userId: userId, // Pass userId here
+                                        product: productModel,
+                                        userId: userId,
                                       ),
                                 ),
                               );
@@ -590,6 +615,35 @@ class ProductRecommendationBubble extends StatelessWidget {
     );
   }
 
+  // Helper method to parse price string to double
+  double _parsePrice(String priceStr) {
+    try {
+      // Remove any non-numeric characters except decimal point
+      final numericString = priceStr.replaceAll(RegExp(r'[^0-9.]'), '');
+      return double.parse(numericString);
+    } catch (e) {
+      return 0.0;
+    }
+  }
+
+  // Helper method to parse discount amount
+  double? _parseDiscount(String priceStr) {
+    try {
+      if (priceStr.contains('\$') && priceStr.contains('(')) {
+        // Example format: "\$50.00 (\$10.00 off)"
+        final discountMatch = RegExp(
+          r'\(.*?(\d+\.?\d*).*?\)',
+        ).firstMatch(priceStr);
+        if (discountMatch != null) {
+          return double.parse(discountMatch.group(1)!);
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   List<ProductInfo> _parseProductRecommendations(String message) {
     final products = <ProductInfo>[];
     final lines = message.split('\n');
@@ -630,6 +684,13 @@ class ProductRecommendationBubble extends StatelessWidget {
         continue;
       }
 
+      // Check for product ID (if available)
+      final idMatch = RegExp(r'id:([a-f0-9]+)').firstMatch(line);
+      if (idMatch != null && currentProduct != null) {
+        currentProduct = currentProduct.copyWith(id: idMatch.group(1));
+        continue;
+      }
+
       // Handle description (lines that don't match any other pattern)
       if (currentProduct != null &&
           line.trim().isNotEmpty &&
@@ -655,6 +716,7 @@ class ProductInfo {
   final String? description;
   final String? url;
   final String? imageUrl;
+  final String? id;
 
   ProductInfo({
     required this.name,
@@ -662,15 +724,16 @@ class ProductInfo {
     this.description,
     this.url,
     this.imageUrl,
+    this.id,
   });
 
-  // Add this copyWith method
   ProductInfo copyWith({
     String? name,
     String? price,
     String? description,
     String? url,
     String? imageUrl,
+    String? id,
   }) {
     return ProductInfo(
       name: name ?? this.name,
@@ -678,44 +741,7 @@ class ProductInfo {
       description: description ?? this.description,
       url: url ?? this.url,
       imageUrl: imageUrl ?? this.imageUrl,
-    );
-  }
-}
-
-class TypingIndicator extends StatelessWidget {
-  const TypingIndicator({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [_buildDot(0), _buildDot(1), _buildDot(2)],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDot(int index) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 300 + (index * 100)),
-        width: 8,
-        height: 8,
-        decoration: BoxDecoration(
-          color: const Color(0xFF6F61EF),
-          borderRadius: BorderRadius.circular(4),
-        ),
-      ),
+      id: id ?? this.id,
     );
   }
 }
