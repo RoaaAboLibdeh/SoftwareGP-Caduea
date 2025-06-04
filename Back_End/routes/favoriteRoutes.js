@@ -10,7 +10,7 @@ const {
 router.post('/add', addToFavorites);
 
 // Remove product from favorites
-router.delete('/remove', removeFromFavorites);
+router.delete('/:userId/items/:productId', removeFromFavorites); // DELETE /api/favorites/123/items/456
 
 // Get all favorites for a user
 router.get('/:userId', getFavorites);

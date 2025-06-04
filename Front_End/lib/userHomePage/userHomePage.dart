@@ -1,4 +1,5 @@
 import 'package:avatar_plus/avatar_plus.dart';
+import 'package:cadeau_project/User_Profile/user_profile.dart';
 import 'package:cadeau_project/avatar_chat_page/avatar_chat_page.dart';
 import 'package:cadeau_project/checkout_screen_map.dart/checkout_screen.dart';
 import 'package:cadeau_project/product/ProductDetailsForUser/ProductDetailsForUser.dart';
@@ -85,15 +86,14 @@ class _userHomePageState extends State<userHomePage> {
       label: 'Categories',
     ),
 
-    BottomNavigationBarItem(
-      icon: Icon(Icons.category_outlined),
-      activeIcon: Icon(
-        Icons.location_city,
-        color: Color.fromARGB(255, 164, 145, 240),
-      ), // Active icon color
-      label: 'Location',
-    ),
-
+    // BottomNavigationBarItem(
+    //   icon: Icon(Icons.category_outlined),
+    //   activeIcon: Icon(
+    //     Icons.location_city,
+    //     color: Color.fromARGB(255, 164, 145, 240),
+    //   ), // Active icon color
+    //   label: 'Location',
+    // ),
     BottomNavigationBarItem(
       icon: Icon(Icons.shopping_cart_outlined),
       activeIcon: Icon(
@@ -965,7 +965,10 @@ class _userHomePageState extends State<userHomePage> {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CartWidget(userId: widget.userId),
+                      builder:
+                          (context) => Profile16SimpleProfileWidget(
+                            userId: widget.userId,
+                          ),
                     ), // 👈 Changed to ProfilePage (assuming "Me" is a profile)
                   );
                 }

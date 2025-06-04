@@ -51,34 +51,36 @@ const addToFavorites = async (req, res) => {
 };
 
 const removeFromFavorites = async (req, res) => {
-    const { userId, productId } = req.body;
+  try {
+    const { userId, productId } = req.params;
 
-    // Validate input
-    if (!userId || !productId) {
-        return res.status(400).json({ message: 'userId and productId are required' });
+    // Find the user's favorites list
+    const favorites = await Favorite.findOne({ user: userId });
+
+    if (!favorites) {
+      return res.status(404).json({ error: "Favorites list not found" });
     }
 
-    try {
-        const favorite = await Favorite.findOne({ user: userId });
-        if (!favorite) {
-            return res.status(404).json({ message: 'Favorite list not found' });
-        }
+    // Remove the item from the array
+    favorites.items = favorites.items.filter(
+      item => item.product.toString() !== productId
+    );
 
-        const initialCount = favorite.items.length;
-        favorite.items = favorite.items.filter(item => item.product.toString() !== productId);
+    // Save the updated list
+    await favorites.save();
 
-        if (favorite.items.length === initialCount) {
-            return res.status(404).json({ message: 'Product not found in favorites' });
-        }
+    res.status(200).json({ 
+      success: true,
+      message: "Item removed from favorites",
+      updatedFavorites: favorites
+    });
 
-        await favorite.save();
-        res.status(200).json(favorite);
-
-    } catch (error) {
-        console.error('Error in removeFromFavorites:', error);
-        res.status(500).json({ message: error.message });
-    }
+  } catch (error) {
+    console.error("Error removing favorite:", error);
+    res.status(500).json({ error: "Server error" });
+  }
 };
+
 
 const getFavorites = async (req, res) => {
     const { userId } = req.params;
