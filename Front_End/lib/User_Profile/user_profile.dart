@@ -1,5 +1,6 @@
 import 'package:cadeau_project/User_Profile/users_favorites.dart';
 import 'package:cadeau_project/User_Profile/users_orders.dart';
+import 'package:cadeau_project/User_Profile/users_reviews.dart';
 import 'package:cadeau_project/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -294,7 +295,14 @@ class _Profile16SimpleProfileWidgetState
                             icon: Icons.star_outline,
                             title: 'Reviews',
                             onTap: () {
-                              // Navigate to reviews
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) =>
+                                          UsersReviews(userId: widget.userId),
+                                ),
+                              );
                             },
                           ),
                         ],

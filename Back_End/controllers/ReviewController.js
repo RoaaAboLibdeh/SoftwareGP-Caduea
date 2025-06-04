@@ -121,3 +121,23 @@ exports.deleteReview = async (req, res) => {
     });
   }
 };
+
+// In ReviewController.js
+exports.getReviewsByUser = async (req, res) => {
+  try {
+    const reviews = await Review.find({ user: req.params.userId })
+      .populate('product', 'name price imageUrls')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      status: 'success',
+      results: reviews.length,
+      reviews
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+};
