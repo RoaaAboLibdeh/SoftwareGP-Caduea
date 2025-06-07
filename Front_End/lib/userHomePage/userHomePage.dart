@@ -25,17 +25,15 @@ class userHomePage extends StatefulWidget {
   final String userId;
   const userHomePage({super.key, required this.userId});
 
-  static String routeName = 'basepageanotherchoice';
-  static String routePath = '/basepageanotherchoice';
-
   @override
   State<userHomePage> createState() => _userHomePageState();
 }
 
 class _userHomePageState extends State<userHomePage> {
-  int _currentIndex = 0; // Tracks the selected tab
-  late BasepageanotherchoiceModel _model;
+  int _currentIndex = 0;
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  TextEditingController _searchController = TextEditingController();
+  FocusNode _searchFocusNode = FocusNode();
 
   static const Map<String, String> avatarNames = {
     'ak': 'Alex',
@@ -63,77 +61,13 @@ class _userHomePageState extends State<userHomePage> {
     'helda23er': 'Welliam',
     'sarah1234': 'Fai',
   };
-
   Map<String, dynamic>? userData;
   bool isLoading = true;
-
-  // Bottom Navigation Items (like SHEIN)
-  final List<BottomNavigationBarItem> _bottomNavItems = [
-    BottomNavigationBarItem(
-      icon: Icon(Icons.home_outlined),
-      activeIcon: Icon(
-        Icons.home,
-        color: Color.fromARGB(255, 164, 145, 240),
-      ), // Active icon color
-      label: 'Home',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.category_outlined),
-      activeIcon: Icon(
-        Icons.category,
-        color: Color.fromARGB(255, 164, 145, 240),
-      ), // Active icon color
-      label: 'Categories',
-    ),
-
-    // BottomNavigationBarItem(
-    //   icon: Icon(Icons.category_outlined),
-    //   activeIcon: Icon(
-    //     Icons.location_city,
-    //     color: Color.fromARGB(255, 164, 145, 240),
-    //   ), // Active icon color
-    //   label: 'Location',
-    // ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.shopping_cart_outlined),
-      activeIcon: Icon(
-        Icons.shopping_cart,
-        color: Color.fromARGB(255, 164, 145, 240),
-      ), // Active icon color
-      label: 'Cart',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.person_outlined),
-      activeIcon: Icon(
-        Icons.person,
-        color: Color.fromARGB(255, 164, 145, 240),
-      ), // Active icon color
-      label: 'Me',
-    ),
-  ];
 
   @override
   void initState() {
     super.initState();
-
-    _model = createModel(context, () => BasepageanotherchoiceModel());
-    _model.textController ??= TextEditingController();
-    _model.textFieldFocusNode ??= FocusNode();
-    // Fetch user data when the page loads
     _fetchUserData();
-  }
-
-  Future<List<Product>> fetchDiscountedProducts() async {
-    final response = await http.get(
-      Uri.parse('http://192.168.88.100:5000/products/discounted'),
-    );
-
-    if (response.statusCode == 200) {
-      List jsonData = json.decode(response.body);
-      return jsonData.map((item) => Product.fromJson(item)).toList();
-    } else {
-      throw Exception('Failed to load discounted products');
-    }
   }
 
   Future<void> _fetchUserData() async {
@@ -161,11 +95,17 @@ class _userHomePageState extends State<userHomePage> {
     }
   }
 
-  @override
-  void dispose() {
-    _model.dispose();
+  Future<List<Product>> fetchTopPopularProducts() async {
+    final response = await http.get(
+      Uri.parse('http://192.168.88.100:5000/api/products/popular?limit=10'),
+    );
 
-    super.dispose();
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Product.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load popular products');
+    }
   }
 
   void _navigateToAvatarChat() {
@@ -185,16 +125,28 @@ class _userHomePageState extends State<userHomePage> {
     );
   }
 
-  Future<List<Product>> fetchTopPopularProducts() async {
+  void _performSearch() async {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) return;
+
     final response = await http.get(
-      Uri.parse('http://192.168.88.100:5000/api/products/popular?limit=10'),
+      Uri.parse('http://192.168.88.100:5000/api/products/search?q=$query'),
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => Product.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load popular products');
+      final results =
+          (jsonDecode(response.body) as List)
+              .map((json) => Product.fromJson(json))
+              .toList();
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) =>
+                  SearchResultPage(products: results, userId: widget.userId),
+        ),
+      );
     }
   }
 
@@ -363,650 +315,453 @@ class _userHomePageState extends State<userHomePage> {
     );
   }
 
-  // Add this above your build method or inside your State class
-  void _performSearch(BuildContext context) async {
-    final query = _model.textController.text.trim();
-    if (query.isNotEmpty) {
-      final response = await http.get(
-        Uri.parse(
-          'http://192.168.88.100:5000/api/products/search?q=$query',
-        ), // Replace with real URL
-        // headers: {'Content-Type': 'application/json'},
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonData = json.decode(response.body);
-        final results = jsonData.map((e) => Product.fromJson(e)).toList();
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) =>
-                    SearchResultPage(products: results, userId: widget.userId),
+  Widget _buildSpecialFeatureButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: EdgeInsets.symmetric(horizontal: 8),
+          padding: EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withOpacity(0.3), width: 1),
           ),
-        );
-      } else {
-        print("Search failed with status: ${response.statusCode}");
-      }
-    }
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 32, color: color),
+              SizedBox(height: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: Scaffold(
-        key: scaffoldKey,
-        backgroundColor: Colors.white,
-        body: SafeArea(
-          top: true,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(16, 0, 16, 0),
-                  // Top Profile Row (Avatar + Name + Notification)
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12.0,
-                          vertical: 8.0,
+    return Scaffold(
+      key: scaffoldKey,
+      backgroundColor: Colors.grey[50],
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            // App Bar with Search
+            SliverAppBar(
+              pinned: true,
+              floating: true,
+              backgroundColor: Colors.white,
+              elevation: 0,
+              title: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => _navigateToAvatarChat(),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF6F61EF), Color(0x4D9489F5)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        child: Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [Color(0xFF6F61EF), Color(0x4D9489F5)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0x806F61EF),
-                                blurRadius: 8,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                            border: Border.all(
-                              color: Color(0xFF6F61EF),
-                              width: 2,
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(3),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(50),
-                              child:
-                                  isLoading
-                                      ? Center(
-                                        child: SizedBox(
-                                          width: 24,
-                                          height: 24,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        ),
-                                      )
-                                      : (userData?['avatar'] != null &&
-                                          userData!['avatar'].isNotEmpty)
-                                      ? AvatarPlus(
-                                        userData?['avatar'] ?? 'ak',
-                                        fit: BoxFit.cover,
-                                      )
-                                      : Image.network(
-                                        'https://picsum.photos/seed/626/600',
-                                        fit: BoxFit.cover,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(2),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(50),
+                          child:
+                              isLoading
+                                  ? Center(
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
                                       ),
-                            ),
-                          ),
+                                    ),
+                                  )
+                                  : (userData?['avatar'] != null &&
+                                      userData!['avatar'].isNotEmpty)
+                                  ? AvatarPlus(
+                                    userData!['avatar'],
+                                    fit: BoxFit.cover,
+                                  )
+                                  : Image.network(
+                                    'https://picsum.photos/seed/626/600',
+                                    fit: BoxFit.cover,
+                                  ),
                         ),
                       ),
+                    ),
+                  ),
+
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Hey ${isLoading ? '' : userData?['name'] ?? 'User'}!',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.notifications_none_rounded,
+                      color: Colors.black87,
+                    ),
+                    onPressed: () {
+                      print('Notification tapped');
+                    },
+                  ),
+                ],
+              ),
+
+              bottom: PreferredSize(
+                preferredSize: Size.fromHeight(80),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
                       Expanded(
-                        child: GestureDetector(
-                          onTap: () => _navigateToAvatarChat(),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
+                        child: TextField(
+                          controller: _searchController,
+                          focusNode: _searchFocusNode,
+                          decoration: InputDecoration(
+                            prefixIcon: Icon(Icons.search, color: Colors.grey),
+                            hintText: 'Search for products...',
+                            filled: true,
+                            fillColor: Colors.grey[100],
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide.none,
                             ),
-                            child: Text(
-                              'Hey ${userData != null ? userData!['name'] ?? 'User' : 'User'}, Let\'s talk!',
-                              style: FlutterFlowTheme.of(
-                                context,
-                              ).headlineMedium.override(
-                                fontFamily: 'Outfit',
-                                color: Color(0xFF15161E),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.3,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20,
                             ),
                           ),
+                          // onSubmitted: (_) => _performSearch(),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 16.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Color(0xFFF1F4F8),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0x1A6F61EF),
-                                blurRadius: 8,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: FlutterFlowIconButton(
-                            borderColor: Colors.transparent,
-                            borderRadius: 40,
-                            buttonSize: 44,
-                            icon: Icon(
-                              Icons.notifications_none_rounded,
-                              color: Color(0xFF15161E),
-                              size: 26,
-                            ),
-                            onPressed: () {
-                              print('Notification pressed...');
-                            },
-                          ),
+                      SizedBox(width: 8),
+                      IconButton(
+                        icon: Icon(
+                          Icons.arrow_forward,
+                          color: const Color.fromARGB(255, 31, 30, 30),
                         ),
+                        onPressed: () => _performSearch(),
                       ),
                     ],
                   ),
                 ),
-                StickyHeader(
-                  overlapHeaders: false,
-                  // Inside your widget
-                  header: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.vertical(
-                        bottom: Radius.circular(24),
+              ),
+            ),
+
+            // Main Content
+            SliverList(
+              delegate: SliverChildListDelegate([
+                // Special Features Section
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  child: Row(
+                    children: [
+                      _buildSpecialFeatureButton(
+                        icon: Icons.card_giftcard,
+                        label: 'Random Box',
+                        color: Colors.purple,
+                        onTap: () {
+                          // Implement random box feature
+                        },
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0x116F61EF),
-                          blurRadius: 12,
-                          offset: Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: Row(
+                      _buildSpecialFeatureButton(
+                        icon: Icons.coffee,
+                        label: '3D Mugs',
+                        color: Colors.orange,
+                        onTap: () {
+                          // Navigate to 3D mugs category
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Hero Banner
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Stack(
                       children: [
-                        // Search Field
-                        Expanded(
-                          child: Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Color(0xFFF8F8F8), Color(0xFFF1F4F8)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(30),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Color(0x206F61EF),
-                                  blurRadius: 10,
-                                  offset: Offset(0, 3),
-                                ),
+                        Image.network(
+                          'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da',
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                        Container(
+                          height: 180,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                Colors.black.withOpacity(0.7),
+                                Colors.transparent,
                               ],
                             ),
-                            child: TextField(
-                              controller: _model.textController,
-                              focusNode: _model.textFieldFocusNode,
-                              // onSubmitted: (_) => _performSearch(context),
-                              decoration: InputDecoration(
-                                prefixIcon: Icon(
-                                  Icons.search_rounded,
-                                  color: Color.fromARGB(255, 164, 145, 240),
-                                  size: 22,
-                                ),
-                                hintText: 'Search for products...',
-                                hintStyle: FlutterFlowTheme.of(
-                                  context,
-                                ).labelMedium.override(
-                                  fontFamily: 'Outfit',
-                                  color: Color(0xFF9E9E9E),
-                                  letterSpacing: 0.0,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: 14,
-                                  horizontal: 12,
-                                ),
-                              ),
-                              style: TextStyle(
-                                color: Color(0xFF15161E),
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              cursorColor: Color.fromARGB(255, 160, 140, 240),
-                            ),
                           ),
-                        ),
-                        SizedBox(width: 8),
-                        // Search Button
-                        Container(
-                          height: 48,
-                          width: 48,
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 164, 145, 240),
-                            borderRadius: BorderRadius.circular(30),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0x306F61EF),
-                                blurRadius: 10,
-                                offset: Offset(0, 3),
+                          padding: EdgeInsets.all(16),
+                          alignment: Alignment.bottomLeft,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Summer Sale',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Up to 50% off selected items',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              SizedBox(height: 12),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => ProductsWithDiscountPage(
+                                            userId: widget.userId,
+                                          ),
+                                    ),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Color(0xFF6F61EF),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                                child: Text('Shop Now'),
                               ),
                             ],
-                          ),
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.arrow_forward,
-                              color: Colors.white,
-                            ),
-                            onPressed: () => _performSearch(context),
                           ),
                         ),
                       ],
                     ),
                   ),
+                ),
 
-                  content: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                        child: Container(
-                          width: double.infinity,
-                          height: 230,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            image: DecorationImage(
-                              image: AssetImage('assets/images/disc3.jpg'),
-                              fit: BoxFit.cover,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.4),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            padding: EdgeInsets.all(20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Special Sales Just for You!',
-                                  style: TextStyle(
-                                    fontSize: 22,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                Text(
-                                  'Up to 50% off selected items.\nLimited time only!',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    color: Colors.white70,
-                                    height: 1.4,
-                                  ),
-                                ),
-                                Align(
-                                  alignment: Alignment.bottomRight,
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (context) =>
-                                                  ProductsWithDiscountPage(
-                                                    userId: widget.userId,
-                                                  ),
-                                        ),
-                                      );
-                                    },
-                                    icon: Icon(
-                                      Icons.shopping_bag_rounded,
-                                      size: 18,
-                                    ),
-                                    label: Text(
-                                      'Shop Now',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Color.fromARGB(
-                                        255,
-                                        164,
-                                        145,
-                                        240,
-                                      ),
-                                      foregroundColor: Colors.white,
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 20,
-                                        vertical: 10,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      elevation: 4,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                // Popular Products Section
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+                  child: Text(
+                    'Popular Products',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                SizedBox(height: 4),
+                FutureBuilder<List<Product>>(
+                  future: fetchTopPopularProducts(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(
+                        child: Text('No recommended products found.'),
+                      );
+                    }
 
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Recommended',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black,
-                              ),
-                            ),
-                            // TextButton(
-                            //   onPressed: () {},
-                            //   child: Text(
-                            //     'See all',
-                            //     style: TextStyle(
-                            //       fontSize: 12,
-                            //       fontWeight: FontWeight.w500,
-                            //       color: Color(0xFF6F61EF),
-                            //     ),
-                            //   ),
-                            // ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      FutureBuilder<List<Product>>(
-                        future: fetchTopPopularProducts(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Center(child: CircularProgressIndicator());
-                          } else if (snapshot.hasError) {
-                            return Center(
-                              child: Text('Error: ${snapshot.error}'),
-                            );
-                          } else if (!snapshot.hasData ||
-                              snapshot.data!.isEmpty) {
-                            return Center(
-                              child: Text('No recommended products found.'),
-                            );
-                          }
+                    final products = snapshot.data!;
 
-                          final products = snapshot.data!;
-
+                    return SizedBox(
+                      height: 260,
+                      child: ListView.separated(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: products.length,
+                        separatorBuilder:
+                            (context, index) => SizedBox(width: 16),
+                        itemBuilder: (context, index) {
+                          final product = products[index];
                           return SizedBox(
-                            height: 260,
-                            child: ListView.separated(
-                              padding: EdgeInsets.symmetric(horizontal: 16),
-                              scrollDirection: Axis.horizontal,
-                              itemCount: products.length,
-                              separatorBuilder:
-                                  (context, index) => SizedBox(width: 16),
-                              itemBuilder: (context, index) {
-                                final product = products[index];
-                                return SizedBox(
-                                  width: 160,
-                                  child: _buildSmallProductCard(
-                                    context: context,
-                                    product: product,
-                                  ),
-                                );
-                              },
+                            width: 160,
+                            child: _buildSmallProductCard(
+                              context: context,
+                              product: product,
                             ),
                           );
                         },
                       ),
+                    );
+                  },
+                ),
 
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(color: Colors.white),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.max,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: EdgeInsetsDirectional.fromSTEB(
-                                16,
-                                16,
-                                0,
-                                12,
-                              ),
-                              child: Text(
-                                'Recent Properties',
-                                style: FlutterFlowTheme.of(
-                                  context,
-                                ).labelMedium.override(
-                                  fontFamily: 'Outfit',
-                                  color: Color(0xFF606A85),
-                                  fontSize: 14,
-                                  letterSpacing: 0.0,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsetsDirectional.fromSTEB(
-                                0,
-                                0,
-                                0,
-                                44,
-                              ),
-                              child: FutureBuilder<List<Product>>(
-                                future: ProductService.fetchProducts(),
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return Center(
-                                      child: CircularProgressIndicator(),
-                                    );
-                                  } else if (snapshot.hasError) {
-                                    return Center(
-                                      child: Text('Error: ${snapshot.error}'),
-                                    );
-                                  } else if (!snapshot.hasData ||
-                                      snapshot.data!.isEmpty) {
-                                    return Center(
-                                      child: Text('No products found'),
-                                    );
-                                  } else {
-                                    final products = snapshot.data!;
-
-                                    return ListView.builder(
-                                      padding: EdgeInsets.zero,
-                                      primary: false,
-                                      shrinkWrap: true,
-                                      scrollDirection: Axis.vertical,
-                                      itemCount: (products.length / 2).ceil(),
-                                      itemBuilder: (context, index) {
-                                        final firstIndex = index * 2;
-                                        final secondIndex = firstIndex + 1;
-
-                                        return Padding(
-                                          padding:
-                                              EdgeInsetsDirectional.fromSTEB(
-                                                16,
-                                                0,
-                                                16,
-                                                0,
-                                              ),
-                                          child: Row(
-                                            children: [
-                                              if (firstIndex < products.length)
-                                                Expanded(
-                                                  child: _buildSmallProductCard(
-                                                    context: context,
-                                                    product:
-                                                        products[firstIndex],
-                                                  ),
-                                                ),
-                                              SizedBox(width: 8),
-                                              if (secondIndex < products.length)
-                                                Expanded(
-                                                  child: _buildSmallProductCard(
-                                                    context: context,
-                                                    product:
-                                                        products[secondIndex],
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  }
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                // All Products Section
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+                  child: Text(
+                    'All Products',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-        // 👇 SHEIN-like Bottom Navigation Bar
-        // Bottom Navigation Bar implementation
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                spreadRadius: 1,
-                blurRadius: 8,
-                offset: Offset(0, -3),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-            child: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: (index) {
-                if (index == _currentIndex)
-                  return; // 👈 Prevents duplicate pushes
+                FutureBuilder<List<Product>>(
+                  future: ProductService.fetchProducts(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(child: Text('No products found'));
+                    } else {
+                      final products = snapshot.data!;
 
-                setState(() => _currentIndex = index);
+                      return ListView.builder(
+                        padding: EdgeInsets.zero,
+                        primary: false,
+                        shrinkWrap: true,
+                        scrollDirection: Axis.vertical,
+                        itemCount: (products.length / 2).ceil(),
+                        itemBuilder: (context, index) {
+                          final firstIndex = index * 2;
+                          final secondIndex = firstIndex + 1;
 
-                if (index == 0) {
-                  Navigator.pushReplacement(
-                    // 👈 Use pushReplacement to avoid stack buildup
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => userHomePage(userId: widget.userId),
-                    ),
-                  );
-                } else if (index == 1) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => CategoriesPage(userId: widget.userId),
-                    ),
-                  );
-                }
-                // } else if (index == 2) {
-                //   Navigator.pushReplacement(
-                //     context,
-                //     MaterialPageRoute(builder: (context) => CheckoutScreen()),
-                //   );
-                // }
-                else if (index == 2) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CartWidget(userId: widget.userId),
-                    ),
-                  );
-                } else if (index == 3) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => Profile16SimpleProfileWidget(
-                            userId: widget.userId,
-                          ),
-                    ), // 👈 Changed to ProfilePage (assuming "Me" is a profile)
-                  );
-                }
-              },
-              type: BottomNavigationBarType.fixed,
-              selectedItemColor: Color.fromARGB(255, 164, 145, 240),
-              unselectedItemColor: Colors.grey[600],
-              selectedLabelStyle: FlutterFlowTheme.of(
-                context,
-              ).titleSmall.override(
-                fontFamily: 'Outfit',
-                color: Color.fromARGB(
-                  255,
-                  164,
-                  145,
-                  240,
-                ), // Using your purple color for selected text
-                fontSize: 12, // Adjusted to match typical bottom nav text size
-                letterSpacing: 0.0,
-                fontWeight: FontWeight.w600, // Slightly bolder for selected
-              ),
-              unselectedLabelStyle: FlutterFlowTheme.of(
-                context,
-              ).titleSmall.override(
-                fontFamily: 'Outfit',
-                color: Colors.grey[600],
-                fontSize: 12,
-                letterSpacing: 0.0,
-                fontWeight: FontWeight.normal,
-              ),
-              backgroundColor: Colors.white,
-              elevation: 0,
-              showSelectedLabels: true,
-              showUnselectedLabels: true,
-              items: _bottomNavItems,
+                          return Padding(
+                            padding: EdgeInsetsDirectional.fromSTEB(
+                              16,
+                              0,
+                              16,
+                              0,
+                            ),
+                            child: Row(
+                              children: [
+                                if (firstIndex < products.length)
+                                  Expanded(
+                                    child: _buildSmallProductCard(
+                                      context: context,
+                                      product: products[firstIndex],
+                                    ),
+                                  ),
+                                SizedBox(width: 8),
+                                if (secondIndex < products.length)
+                                  Expanded(
+                                    child: _buildSmallProductCard(
+                                      context: context,
+                                      product: products[secondIndex],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    }
+                  },
+                ),
+                SizedBox(height: 80),
+              ]),
             ),
-          ),
+          ],
         ),
+      ),
+
+      // Bottom Navigation Bar
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          if (index == _currentIndex) return;
+          setState(() => _currentIndex = index);
+
+          switch (index) {
+            case 0:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => userHomePage(userId: widget.userId),
+                ),
+              );
+              break;
+            case 1:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CategoriesPage(userId: widget.userId),
+                ),
+              );
+              break;
+            case 2:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CartWidget(userId: widget.userId),
+                ),
+              );
+              break;
+            case 3:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) =>
+                          Profile16SimpleProfileWidget(userId: widget.userId),
+                ),
+              );
+              break;
+          }
+        },
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Color(0xFF6F61EF),
+        unselectedItemColor: Colors.grey,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.category_outlined),
+            activeIcon: Icon(Icons.category),
+            label: 'Categories',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart_outlined),
+            activeIcon: Icon(Icons.shopping_cart),
+            label: 'Cart',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outlined),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
