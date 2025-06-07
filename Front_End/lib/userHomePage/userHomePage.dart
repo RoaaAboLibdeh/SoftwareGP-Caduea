@@ -1,4 +1,5 @@
 import 'package:avatar_plus/avatar_plus.dart';
+import 'package:cadeau_project/RandomBox/RandomBoxSelectionPage.dart';
 import 'package:cadeau_project/User_Profile/user_profile.dart';
 import 'package:cadeau_project/avatar_chat_page/avatar_chat_page.dart';
 import 'package:cadeau_project/checkout_screen_map.dart/checkout_screen.dart';
@@ -487,7 +488,15 @@ class _userHomePageState extends State<userHomePage> {
                         label: 'Random Box',
                         color: Colors.purple,
                         onTap: () {
-                          // Implement random box feature
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => RandomBoxSelectionPage(
+                                    userId: widget.userId,
+                                  ),
+                            ),
+                          );
                         },
                       ),
                       _buildSpecialFeatureButton(
