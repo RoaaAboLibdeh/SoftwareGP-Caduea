@@ -1,4 +1,5 @@
 import 'package:cadeau_project/RandomBox/RandomBoxPage.dart';
+import 'package:cadeau_project/home_page_payment.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/animation.dart';
 import 'package:confetti/confetti.dart';
@@ -68,6 +69,65 @@ class _RandomBoxSelectionPageState extends State<RandomBoxSelectionPage>
     super.dispose();
   }
 
+  void _navigateToPayment(BuildContext context, PriceTier tier) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder:
+          (context) => Container(
+            padding: EdgeInsets.all(20), // ✅ This is a parameter of Container
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              // padding: EdgeInsets.all(20),
+            ),
+            child: Column(
+              // ✅ This is a parameter of Container
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Choose Payment Method',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 20),
+                ListTile(
+                  leading: Icon(Icons.credit_card, color: Colors.blue),
+                  title: Text('Pay with Card'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomePagePayment(),
+                      ),
+                    );
+                  },
+                ),
+                Divider(),
+                ListTile(
+                  leading: Icon(Icons.money, color: Colors.green),
+                  title: Text('Pay with Cash'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => RandomBoxPage(
+                              userId: widget.userId,
+                              priceTier: tier,
+                            ),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: 10),
+              ],
+            ),
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,18 +142,7 @@ class _RandomBoxSelectionPageState extends State<RandomBoxSelectionPage>
       body: Stack(
         children: [
           // Background decoration
-          Positioned(
-            top: -50,
-            right: -50,
-            child: Opacity(
-              opacity: 0.1,
-              // child: Lottie.asset(
-              //   'assets/confetti.json',
-              //   width: 200,
-              //   height: 200,
-              // ),
-            ),
-          ),
+          Positioned(top: -50, right: -50, child: Opacity(opacity: 0.1)),
 
           // Main content
           Padding(
@@ -117,7 +166,7 @@ class _RandomBoxSelectionPageState extends State<RandomBoxSelectionPage>
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF6F61EF),
+                          color: Color.fromARGB(255, 137, 52, 52),
                         ),
                       ),
                       SizedBox(height: 8),
@@ -254,19 +303,13 @@ class _RandomBoxSelectionPageState extends State<RandomBoxSelectionPage>
                     padding: const EdgeInsets.only(top: 16),
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.push(
+                        _navigateToPayment(
                           context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => RandomBoxPaymentPage(
-                                  userId: widget.userId,
-                                  priceTier: _priceTiers[_selectedTier!],
-                                ),
-                          ),
+                          _priceTiers[_selectedTier!],
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF6F61EF),
+                        backgroundColor: Color.fromARGB(255, 7, 7, 7),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -278,6 +321,7 @@ class _RandomBoxSelectionPageState extends State<RandomBoxSelectionPage>
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -324,42 +368,40 @@ class PriceTier {
   });
 }
 
-class RandomBoxPaymentPage extends StatelessWidget {
-  final String userId;
-  final PriceTier priceTier;
+// class HomePagePaymentWrapper extends StatefulWidget {
+//   final String userId;
+//   final PriceTier priceTier;
 
-  const RandomBoxPaymentPage({
-    Key? key,
-    required this.userId,
-    required this.priceTier,
-  }) : super(key: key);
+//   const HomePagePaymentWrapper({
+//     Key? key,
+//     required this.userId,
+//     required this.priceTier,
+//   }) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Payment')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Payment page for ${priceTier.title}'),
-            // Implement your payment UI here
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) =>
-                            RandomBoxPage(userId: userId, priceTier: priceTier),
-                  ),
-                );
-              },
-              child: Text('Complete Payment'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   _HomePagePaymentWrapperState createState() => _HomePagePaymentWrapperState();
+// }
+
+// class _HomePagePaymentWrapperState extends State<HomePagePaymentWrapper> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: Text('Card Payment')),
+//       body: HomePagePayment(
+//         onPaymentSuccess: () {
+//           Navigator.pushReplacement(
+//             context,
+//             MaterialPageRoute(
+//               builder:
+//                   (context) => RandomBoxPage(
+//                     userId: widget.userId,
+//                     priceTier: widget.priceTier,
+//                   ),
+//             ),
+//           );
+//         },
+//         // amount: widget.priceTier.price.toDouble(),
+//       ),
+//     );
+//   }
+// }

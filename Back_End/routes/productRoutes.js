@@ -77,4 +77,40 @@ router.get('/category/:categoryId', async (req, res) => {
   }
 });
 
+
+router.get('/random-box', async (req, res) => {
+  try {
+    const { priceTier, userId } = req.query;
+    
+    // Determine price range based on tier
+    let minPrice, maxPrice;
+    if (priceTier == 10) {
+      minPrice = 5;
+      maxPrice = 10;
+    } else if (priceTier == 20) {
+      minPrice = 15;
+      maxPrice = 20;
+    } else if (priceTier == 50) {
+      minPrice = 30;
+      maxPrice = 50;
+    }
+
+    // Get random products that match the price range
+    const products = await Product.aggregate([
+      { 
+        $match: { 
+          price: { $gte: minPrice, $lte: maxPrice },
+          stock: { $gt: 0 } // Only products in stock
+        }
+      },
+      { $sample: { size: priceTier == 10 ? 2 : priceTier == 20 ? 3 : 5 } },
+      { $sort: { popularity: -1 } }
+    ]);
+
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

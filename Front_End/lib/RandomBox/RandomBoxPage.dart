@@ -1,8 +1,10 @@
+import 'package:cadeau_project/RandomBox/ApiServiceRandomBox.dart';
 import 'package:cadeau_project/RandomBox/RandomBoxSelectionPage.dart';
+import 'package:cadeau_project/models/product_model.dart';
+import 'package:cadeau_project/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/animation.dart';
 import 'package:lottie/lottie.dart';
-import 'package:cadeau_project/models/product_model.dart';
 
 class RandomBoxPage extends StatefulWidget {
   final String userId;
@@ -60,38 +62,31 @@ class _RandomBoxPageState extends State<RandomBoxPage>
   }
 
   Future<void> _fetchRandomProducts() async {
-    // Simulate API call
-    await Future.delayed(Duration(seconds: 1));
-
-    // Mock data - in a real app, you'd fetch from your API
-    setState(() {
-      _randomProducts = List.generate(
-        widget.priceTier.price ~/ 10 + 1,
-        (index) => Product(
-          id: 'prod${index + 100}',
-          name: 'Premium Item ${index + 1}',
-          description: 'Amazing product you\'ll love!',
-          price:
-              (widget.priceTier.price * 1.5) /
-              (widget.priceTier.price ~/ 10 + 1),
-          discountAmount: 0,
-          imageUrls: ['https://picsum.photos/200/300?random=$index'],
-          recipientType: ['Everyone'],
-          occasion: ['Any'],
-          stock: 10,
-          isOnSale: false,
-          category: 'Random Box',
-        ),
+    try {
+      // Fetch products from your API based on the price tier
+      final products = await ApiServiceRandomBox().getRandomBoxProducts(
+        priceTier: widget.priceTier.price,
+        userId: widget.userId,
       );
 
-      _totalValue = _randomProducts.fold(
-        0,
-        (sum, product) => sum + product.price,
-      );
-      _isLoading = false;
-    });
+      setState(() {
+        _randomProducts = products;
+        _totalValue = _randomProducts.fold(
+          0,
+          (sum, product) => sum + product.price,
+        );
+        _isLoading = false;
+      });
 
-    _animationController.forward();
+      _animationController.forward();
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load products: $e')));
+    }
   }
 
   void _revealAllItems() {
@@ -114,17 +109,10 @@ class _RandomBoxPageState extends State<RandomBoxPage>
         child: Stack(
           children: [
             // Background decoration
-            Positioned(
-              top: -50,
-              right: -50,
+            Positioned.fill(
               child: Opacity(
-                opacity: 0.9,
-                child: Lottie.asset(
-                  'assets/confetti.json',
-                  width: 200,
-                  height: 200,
-                  repeat: true,
-                ),
+                opacity: 0.05,
+                child: Lottie.asset('assets/confetti.json', repeat: true),
               ),
             ),
 
@@ -138,7 +126,10 @@ class _RandomBoxPageState extends State<RandomBoxPage>
                   Row(
                     children: [
                       IconButton(
-                        icon: Icon(Icons.arrow_back),
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: Color.fromARGB(255, 17, 17, 18),
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                       SizedBox(width: 8),
@@ -147,6 +138,7 @@ class _RandomBoxPageState extends State<RandomBoxPage>
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
+                          color: Color(0xFF6F61EF),
                         ),
                       ),
                     ],
@@ -214,6 +206,11 @@ class _RandomBoxPageState extends State<RandomBoxPage>
                                   offset: Offset(0, 4),
                                 ),
                               ],
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Colors.white, Color(0xFFF5F5F8)],
+                              ),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -233,6 +230,7 @@ class _RandomBoxPageState extends State<RandomBoxPage>
                                       style: TextStyle(
                                         fontSize: 24,
                                         fontWeight: FontWeight.bold,
+                                        color: Color(0xFF6F61EF),
                                       ),
                                     ),
                                   ],
@@ -271,12 +269,19 @@ class _RandomBoxPageState extends State<RandomBoxPage>
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
+                                  color: Color(0xFF6F61EF),
                                 ),
                               ),
                               if (!_showAllItems)
                                 TextButton(
                                   onPressed: _revealAllItems,
-                                  child: Text('Reveal All'),
+                                  child: Text(
+                                    'Reveal All',
+                                    style: TextStyle(
+                                      color: Color(0xFF6F61EF),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                             ],
                           ),
@@ -284,9 +289,11 @@ class _RandomBoxPageState extends State<RandomBoxPage>
 
                           // Items list
                           Expanded(
-                            child: ListView.builder(
+                            child: ListView.separated(
                               itemCount:
                                   _showAllItems ? _randomProducts.length : 1,
+                              separatorBuilder:
+                                  (context, index) => SizedBox(height: 12),
                               itemBuilder: (context, index) {
                                 final product = _randomProducts[index];
                                 return AnimatedBuilder(
@@ -318,65 +325,144 @@ class _RandomBoxPageState extends State<RandomBoxPage>
   }
 
   Widget _buildProductItem(Product product) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      elevation: 2,
+      borderRadius: BorderRadius.circular(16),
+      color: Colors.white,
+      child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Row(
-          children: [
-            // Product image
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                product.imageUrls.first,
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-              ),
-            ),
-            SizedBox(width: 12),
-
-            // Product details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        onTap: () {
+          // Navigate to product details if needed
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            children: [
+              // Product image with shimmer effect
+              Hero(
+                tag: 'product-${product.id}',
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    color: Colors.grey[200],
+                    child:
+                        product.imageUrls.isNotEmpty
+                            ? Image.network(
+                              product.imageUrls.first,
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                              loadingBuilder: (
+                                context,
+                                child,
+                                loadingProgress,
+                              ) {
+                                if (loadingProgress == null) return child;
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    value:
+                                        loadingProgress.expectedTotalBytes !=
+                                                null
+                                            ? loadingProgress
+                                                    .cumulativeBytesLoaded /
+                                                loadingProgress
+                                                    .expectedTotalBytes!
+                                            : null,
+                                  ),
+                                );
+                              },
+                            )
+                            : Icon(Icons.image, color: Colors.grey[400]),
                   ),
-                  SizedBox(height: 4),
-                  Text(
-                    '\$${product.price.toStringAsFixed(2)}',
-                    style: TextStyle(fontSize: 18, color: Color(0xFF6F61EF)),
+                ),
+              ),
+              SizedBox(width: 12),
+
+              // Product details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.black87,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      product.description,
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          '\$${product.price.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF6F61EF),
+                          ),
+                        ),
+                        if (product.discountAmount! > 0)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text(
+                              '\$${(product.price * (1 + product.discountAmount! / 100)).toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Action buttons
+              Column(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.favorite_border, color: Color(0xFF6F61EF)),
+                    onPressed: () {
+                      // Add to favorites
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Added ${product.name} to favorites'),
+                        ),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.add_shopping_cart,
+                      color: Color(0xFF6F61EF),
+                    ),
+                    onPressed: () {
+                      // Add to cart
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Added ${product.name} to cart'),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
-            ),
-
-            // Add to cart button
-            IconButton(
-              icon: Icon(Icons.add_shopping_cart),
-              color: Color(0xFF6F61EF),
-              onPressed: () {
-                // Add to cart functionality
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('${product.name} added to cart')),
-                );
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

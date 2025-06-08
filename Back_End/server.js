@@ -8,6 +8,7 @@ const productsRoutes = require('./routes/productRoutes');
 const path = require('path');
 const cartRoutes = require('./routes/cartRoutes');
 const chatRoutes = require('./routes/chat');
+const pointsRoutes = require('./routes/pointsRoutes'); // ✅ correct path
 
 const app = express();
 app.use(express.json());
@@ -73,3 +74,6 @@ app.use('/api/box', boxRoutes);
 
 const orderRoutes = require('./routes/orderRoutes');
 app.use('/api/orders', orderRoutes);
+
+// ✅ Mount your points routes at /api/points
+app.use('/api/points', pointsRoutes);

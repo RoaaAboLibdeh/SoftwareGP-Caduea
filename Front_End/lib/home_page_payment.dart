@@ -112,10 +112,7 @@ class _HomePagePaymentState extends State<HomePagePayment> {
                 paymentSheetInitialization(amount.round().toString(), "USD");
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              child: Text(
-                "Pay Now ${amount.toString()}",
-                style: TextStyle(color: Colors.white),
-              ),
+              child: Text("Pay Now", style: TextStyle(color: Colors.white)),
             ),
           ],
         ),

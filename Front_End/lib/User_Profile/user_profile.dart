@@ -11,7 +11,6 @@ import '/custom/theme.dart';
 import '/userHomePage/userHomePage.dart';
 import '/userCart/userCart.dart';
 import '/Categories/ListCategories.dart';
-// import '/order_history/order_history.dart'; // You'll need to create this
 
 class Profile16SimpleProfileWidget extends StatefulWidget {
   final String userId;
@@ -27,7 +26,9 @@ class Profile16SimpleProfileWidget extends StatefulWidget {
 class _Profile16SimpleProfileWidgetState
     extends State<Profile16SimpleProfileWidget> {
   Map<String, dynamic>? userData;
+  Map<String, dynamic>? pointsData;
   bool isLoading = true;
+  bool isPointsLoading = true;
   bool isDarkMode = false;
   String selectedCurrency = 'USD';
   final List<String> currencies = ['USD', 'EUR', 'GBP', 'JPY', 'AED'];
@@ -37,6 +38,7 @@ class _Profile16SimpleProfileWidgetState
     super.initState();
     _loadUserPreferences();
     _fetchUserData();
+    _fetchPointsData();
   }
 
   Future<void> _loadUserPreferences() async {
@@ -45,7 +47,6 @@ class _Profile16SimpleProfileWidgetState
     setState(() {
       selectedCurrency = prefs.getString('currency') ?? 'USD';
     });
-    // No need to set isDarkMode here as ThemeProvider handles it
   }
 
   Future<void> _fetchUserData() async {
@@ -73,19 +74,317 @@ class _Profile16SimpleProfileWidgetState
     }
   }
 
+  Future<void> _fetchPointsData() async {
+    try {
+      final url = Uri.parse(
+        'http://192.168.88.100:5000/api/points/${widget.userId}',
+      );
+      print('Fetching points data from: $url'); // Debug log
+
+      final response = await http.get(url);
+      print('Response status: ${response.statusCode}'); // Debug log
+      print('Response body: ${response.body}'); // Debug log
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is Map<String, dynamic>) {
+          setState(() {
+            pointsData = data;
+            isPointsLoading = false;
+          });
+        } else {
+          throw Exception('Invalid points data format: ${response.body}');
+        }
+      } else {
+        throw Exception(
+          'Failed to load points data. Status: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('Error in _fetchPointsData: $e'); // Detailed error log
+      setState(() {
+        isPointsLoading = false;
+      });
+
+      // Show error to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load points data: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Future<void> _changeCurrency(String newCurrency) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('currency', newCurrency);
     setState(() {
       selectedCurrency = newCurrency;
     });
-    // You might want to add a provider or other state management to update the currency app-wide
   }
 
   Future<void> _toggleDarkMode(bool value) async {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     await themeProvider.toggleTheme(value);
-    // Remove the setState call as ThemeProvider will notify listeners
+  }
+
+  Widget _buildPointsCard() {
+    // Convert all integer values to double explicitly
+    final availablePoints = (pointsData?['availablePoints'] ?? 0).toDouble();
+    final lifetimeEarned =
+        (pointsData?['lifetimePointsEarned'] ?? 0).toDouble();
+    final lifetimeUsed = (pointsData?['lifetimePointsUsed'] ?? 0).toDouble();
+
+    // Calculate progress safely (avoid division by zero)
+    final progress =
+        lifetimeEarned > 0 ? availablePoints / lifetimeEarned : 0.0;
+    final nextTierPoints = _calculateNextTierPoints(availablePoints.toInt());
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'REWARD POINTS',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+                Icon(Icons.star, color: Colors.amber),
+              ],
+            ),
+            SizedBox(height: 16),
+            Column(
+              children: [
+                LinearProgressIndicator(
+                  value: progress,
+                  backgroundColor: Colors.grey[200],
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
+                  minHeight: 10,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  nextTierPoints > 0
+                      ? 'Earn ${nextTierPoints - availablePoints} more points for next reward tier'
+                      : 'You\'ve reached the highest reward tier!',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Available Points',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                    Text(
+                      '$availablePoints',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 164, 145, 240),
+                      ),
+                    ),
+                  ],
+                ),
+                ElevatedButton(
+                  onPressed:
+                      availablePoints >= 100
+                          ? () => _showRedeemDialog(context)
+                          : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromARGB(255, 164, 145, 240),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  child: Text('Redeem', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            Divider(),
+            SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Lifetime Earned',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    Text(
+                      '$lifetimeEarned',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Lifetime Redeemed',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    Text(
+                      '$lifetimeUsed',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  int _calculateNextTierPoints(int currentPoints) {
+    if (currentPoints < 100) return 100;
+    if (currentPoints < 250) return 250;
+    if (currentPoints < 500) return 500;
+    if (currentPoints < 1000) return 1000;
+    return 0;
+  }
+
+  Future<void> _showRedeemDialog(BuildContext context) async {
+    final availablePoints = pointsData?['availablePoints'] ?? 0;
+    int pointsToRedeem = 100;
+
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Redeem Reward Points'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Available Points: $availablePoints'),
+                  SizedBox(height: 16),
+                  Text('How many points would you like to redeem?'),
+                  SizedBox(height: 16),
+                  Slider(
+                    value: pointsToRedeem.toDouble(),
+                    min: 100,
+                    max: availablePoints.toDouble(),
+                    divisions: (availablePoints ~/ 100).clamp(1, 10),
+                    label: '$pointsToRedeem points',
+                    onChanged: (value) {
+                      setState(() {
+                        pointsToRedeem = value.round();
+                      });
+                    },
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '${pointsToRedeem} points = \$${(pointsToRedeem / 100).toStringAsFixed(2)} discount',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      final response = await http.post(
+                        Uri.parse(
+                          'http://192.168.88.100:5000/api/points/redeem',
+                        ),
+                        headers: {'Content-Type': 'application/json'},
+                        body: json.encode({
+                          'userId': widget.userId,
+                          'pointsToRedeem': pointsToRedeem,
+                        }),
+                      );
+
+                      if (response.statusCode == 200) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Successfully redeemed $pointsToRedeem points!',
+                            ),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        await _fetchPointsData();
+                        Navigator.pop(context);
+                      } else {
+                        throw Exception('Failed to redeem points');
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error redeeming points: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromARGB(255, 164, 145, 240),
+                  ),
+                  child: Text('Redeem'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSettingsCard({required List<Widget> children}) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(children: children),
+    );
+  }
+
+  Widget _buildSettingsItem({
+    required IconData icon,
+    required String title,
+    Widget? trailing,
+    VoidCallback? onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: Color.fromARGB(255, 164, 145, 240)),
+      title: Text(title),
+      trailing: trailing ?? Icon(Icons.chevron_right, color: Colors.grey),
+      onTap: onTap,
+    );
   }
 
   @override
@@ -100,22 +399,20 @@ class _Profile16SimpleProfileWidgetState
           elevation: 0,
           actions: [
             IconButton(
-              icon: Icon(Icons.edit),
-              onPressed: () {
-                // Navigate to edit profile page
-              },
+              icon: Icon(Icons.star, color: Colors.amber),
+              onPressed: () {},
             ),
+            IconButton(icon: Icon(Icons.edit), onPressed: () {}),
           ],
         ),
         body:
-            isLoading
+            isLoading || isPointsLoading
                 ? Center(child: CircularProgressIndicator())
                 : SingleChildScrollView(
                   padding: EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Profile Header
                       Center(
                         child: Column(
                           children: [
@@ -145,9 +442,9 @@ class _Profile16SimpleProfileWidgetState
                           ],
                         ),
                       ),
-                      SizedBox(height: 32),
-
-                      // Account Settings Section
+                      SizedBox(height: 24),
+                      _buildPointsCard(),
+                      SizedBox(height: 24),
                       Text(
                         'ACCOUNT SETTINGS',
                         style: TextStyle(
@@ -162,39 +459,29 @@ class _Profile16SimpleProfileWidgetState
                           _buildSettingsItem(
                             icon: Icons.person_outline,
                             title: 'Personal Information',
-                            onTap: () {
-                              // Navigate to personal info page
-                            },
+                            onTap: () {},
                           ),
                           Divider(height: 1),
                           _buildSettingsItem(
                             icon: Icons.location_on_outlined,
                             title: 'Shipping Addresses',
-                            onTap: () {
-                              // Navigate to addresses page
-                            },
+                            onTap: () {},
                           ),
                           Divider(height: 1),
                           _buildSettingsItem(
                             icon: Icons.credit_card_outlined,
                             title: 'Payment Methods',
-                            onTap: () {
-                              // Navigate to payment methods page
-                            },
+                            onTap: () {},
                           ),
                           Divider(height: 1),
                           _buildSettingsItem(
                             icon: Icons.notifications_outlined,
                             title: 'Notifications',
-                            onTap: () {
-                              // Navigate to notifications settings
-                            },
+                            onTap: () {},
                           ),
                         ],
                       ),
                       SizedBox(height: 24),
-
-                      // App Settings Section
                       Text(
                         'APP SETTINGS',
                         style: TextStyle(
@@ -241,15 +528,11 @@ class _Profile16SimpleProfileWidgetState
                             icon: Icons.language_outlined,
                             title: 'Language',
                             trailing: Text('English'),
-                            onTap: () {
-                              // Show language selection dialog
-                            },
+                            onTap: () {},
                           ),
                         ],
                       ),
                       SizedBox(height: 24),
-
-                      // Actions Section
                       Text(
                         'ACTIONS',
                         style: TextStyle(
@@ -308,8 +591,6 @@ class _Profile16SimpleProfileWidgetState
                         ],
                       ),
                       SizedBox(height: 24),
-
-                      // Support Section
                       Text(
                         'SUPPORT',
                         style: TextStyle(
@@ -324,36 +605,26 @@ class _Profile16SimpleProfileWidgetState
                           _buildSettingsItem(
                             icon: Icons.help_outline,
                             title: 'Help Center',
-                            onTap: () {
-                              // Navigate to help center
-                            },
+                            onTap: () {},
                           ),
                           Divider(height: 1),
                           _buildSettingsItem(
                             icon: Icons.headset_mic_outlined,
                             title: 'Contact Us',
-                            onTap: () {
-                              // Navigate to contact us
-                            },
+                            onTap: () {},
                           ),
                           Divider(height: 1),
                           _buildSettingsItem(
                             icon: Icons.privacy_tip_outlined,
                             title: 'Privacy Policy',
-                            onTap: () {
-                              // Show privacy policy
-                            },
+                            onTap: () {},
                           ),
                         ],
                       ),
                       SizedBox(height: 24),
-
-                      // Logout Button
                       Center(
                         child: ElevatedButton(
-                          onPressed: () {
-                            // Implement logout functionality
-                          },
+                          onPressed: () {},
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color.fromARGB(255, 164, 145, 240),
                             foregroundColor: Colors.white,
@@ -364,18 +635,17 @@ class _Profile16SimpleProfileWidgetState
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
-                            //  iconColor: context Text('Log Out'),
                           ),
-                          child: null,
+                          child: Text('Log Out'),
                         ),
                       ),
                     ],
                   ),
                 ),
         bottomNavigationBar: BottomNavigationBar(
-          currentIndex: 3, // 'Me' tab is selected
+          currentIndex: 3,
           onTap: (index) {
-            if (index == 3) return; // Already on profile page
+            if (index == 3) return;
 
             if (index == 0) {
               Navigator.pushReplacement(
@@ -439,28 +709,6 @@ class _Profile16SimpleProfileWidgetState
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSettingsCard({required List<Widget> children}) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Column(children: children),
-    );
-  }
-
-  Widget _buildSettingsItem({
-    required IconData icon,
-    required String title,
-    Widget? trailing,
-    VoidCallback? onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: Color.fromARGB(255, 164, 145, 240)),
-      title: Text(title),
-      trailing: trailing ?? Icon(Icons.chevron_right, color: Colors.grey),
-      onTap: onTap,
     );
   }
 }
