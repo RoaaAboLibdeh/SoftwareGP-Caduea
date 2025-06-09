@@ -1,29 +1,16 @@
 import 'package:cadeau_project/keys.dart';
-import 'package:cadeau_project/theme_provider.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:provider/provider.dart';
+import 'package:lottie/lottie.dart';
 import 'Sign_login/Authentication.dart';
-import 'dart:io';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-    Stripe.publishableKey = publishablekey;
-    await Stripe.instance.applySettings();
-  } else {
-    debugPrint("Stripe initialization skipped on web");
-  }
-  // runApp(const MyApp());
-  runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeProvider(),
-      child: const MyApp(),
-    ),
-  );
+  Stripe.publishableKey = publishablekey;
+  await Stripe.instance.applySettings();
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -31,12 +18,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
     return MaterialApp(
       title: 'Cadeau',
-      theme: ThemeData(),
-      darkTheme: ThemeData(),
-      themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color.fromARGB(255, 124, 177, 255),
+          brightness: Brightness.light,
+        ),
+        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
+      ),
       debugShowCheckedModeBanner: false,
       home: const WelcomePageWidget(),
     );
@@ -61,26 +52,27 @@ class _WelcomePageWidgetState extends State<WelcomePageWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final blueColor = const Color.fromARGB(255, 124, 177, 255);
+    final orangeColor = const Color.fromARGB(255, 255, 180, 68);
+
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Animated gradient background
-          Animate(
-            effects: [FadeEffect(duration: 1000.ms)],
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [const Color(0xFFF9F7FD), const Color(0xFFF9F7FD)],
+          // Simple white background with subtle decorative elements
+          Positioned.fill(
+            child: Animate(
+              effects: [FadeEffect(duration: 1000.ms)],
+              child: Container(
+                color: Colors.white,
+                child: CustomPaint(
+                  painter: _DotsPainter(blueColor.withOpacity(0.05)),
                 ),
               ),
             ),
           ),
 
-          // Floating gift icons
-          ..._buildFloatingGifts(),
-
+          // Main content
           Center(
             child: SingleChildScrollView(
               child: Padding(
@@ -88,8 +80,7 @@ class _WelcomePageWidgetState extends State<WelcomePageWidget> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Animated logo
-                    // Animated circular logo with clipped image
+                    // Logo with Lottie animation
                     Animate(
                       effects: [
                         ScaleEffect(
@@ -104,30 +95,26 @@ class _WelcomePageWidgetState extends State<WelcomePageWidget> {
                         height: 180,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: const Color(0xFF998BCF),
-                            width: 2,
-                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF998BCF).withOpacity(0.3),
+                              color: blueColor.withOpacity(0.1),
                               blurRadius: 20,
-                              spreadRadius: 4,
+                              spreadRadius: 5,
                             ),
                           ],
                         ),
-                        child: ClipOval(
-                          child: Image.asset(
-                            'assets/images/gift1.jpg',
-                            fit: BoxFit.cover,
-                          ),
+                        child: Lottie.asset(
+                          'assets/logo.json',
+                          width: 150,
+                          height: 150,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ).animate(target: _animate ? 1 : 0),
 
                     const SizedBox(height: 40),
 
-                    // Welcome text
+                    // App name and tagline
                     Animate(
                       effects: [
                         FadeEffect(duration: 600.ms),
@@ -136,80 +123,41 @@ class _WelcomePageWidgetState extends State<WelcomePageWidget> {
                           duration: 800.ms,
                         ),
                       ],
-                      child: RichText(
-                        textAlign: TextAlign.center,
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'Welcome to\n',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF998BCF),
-                              ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Cadeau',
+                            style: GoogleFonts.pacifico(
+                              fontSize: 48,
+                              fontWeight: FontWeight.w100,
+                              letterSpacing: 1.5,
+                              color: blueColor,
                             ),
-                            TextSpan(
-                              text: 'Cadeau',
-                              style: GoogleFonts.dancingScript(
-                                fontSize: 52,
-                                fontWeight: FontWeight.w700,
-                                foreground:
-                                    Paint()
-                                      ..shader = const LinearGradient(
-                                        colors: [
-                                          Color(0xFF998BCF),
-                                          Color(0xFFB8A8E6),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ).createShader(
-                                        const Rect.fromLTWH(0, 0, 200, 70),
-                                      ),
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(0, 4),
-                                    blurRadius: 10,
-                                    color: Color(0xFF998BCF).withOpacity(0.5),
-                                  ),
-                                ],
-                                letterSpacing: 1.2,
-                              ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Where every gift tells a story!',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: Colors.black54,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ).animate(target: _animate ? 1 : 0),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 60),
 
-                    // Tagline
-                    Animate(
-                      effects: [FadeEffect(duration: 800.ms)],
-                      child: Text(
-                        'Where every gift tells a beautiful story!',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: const Color.fromARGB(
-                            255,
-                            79,
-                            68,
-                            128,
-                          ).withOpacity(0.8),
-                        ),
-                      ),
-                    ).animate(target: _animate ? 1 : 0),
-
-                    const SizedBox(height: 50),
-
-                    // Get Started Button
+                    // Primary action button
                     Animate(
                       effects: [
                         ScaleEffect(duration: 600.ms, curve: Curves.elasticOut),
                         FadeEffect(duration: 800.ms),
                       ],
-                      child: _buildGradientButton(
+                      child: _buildSolidButton(
                         context,
-                        'Begin the Journey',
+                        'Start Shopping',
+                        blueColor,
                         () => Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -218,10 +166,9 @@ class _WelcomePageWidgetState extends State<WelcomePageWidget> {
                         ),
                       ),
                     ).animate(target: _animate ? 1 : 0),
-
                     const SizedBox(height: 20),
 
-                    // Sign in prompt
+                    // Secondary action
                     Animate(
                       effects: [FadeEffect(duration: 1000.ms)],
                       child: TextButton(
@@ -234,10 +181,10 @@ class _WelcomePageWidgetState extends State<WelcomePageWidget> {
                           );
                         },
                         child: Text(
-                          'Already have an account? Sign In',
+                          'Sign In / Register',
                           style: GoogleFonts.poppins(
-                            color: const Color(0xFF998BCF),
-                            decoration: TextDecoration.underline,
+                            color: orangeColor,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -252,104 +199,125 @@ class _WelcomePageWidgetState extends State<WelcomePageWidget> {
     );
   }
 
-  List<Widget> _buildFloatingGifts() {
-    return [
-      Positioned(
-        top: 100,
-        left: 30,
-        child: _buildFloatingGift(
-          const Color(0xFFF9F7FD),
-          Icons.card_giftcard,
-          0.5,
-        ),
-      ),
-      Positioned(
-        bottom: 150,
-        right: 40,
-        child: _buildFloatingGift(
-          const Color(0xFFF9F7FD),
-          Icons.celebration,
-          0.7,
-        ),
-      ),
-      Positioned(
-        top: 200,
-        right: 50,
-        child: _buildFloatingGift(
-          const Color(0xFFF9F7FD),
-          Icons.local_florist,
-          0.6,
-        ),
-      ),
-    ];
-  }
-
-  Widget _buildFloatingGift(Color color, IconData icon, double scale) {
-    return Animate(
-      effects: [
-        ScaleEffect(
-          duration: 1500.ms,
-          curve: Curves.elasticOut,
-          begin: Offset(scale * 0.5, scale * 0.5),
-        ),
-        FadeEffect(duration: 1000.ms),
-      ],
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.3),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: color.withOpacity(0.8), size: 30),
-      ),
-    ).animate(
-      target: _animate ? 1 : 0,
-      onPlay: (controller) => controller.repeat(reverse: true),
-    );
-  }
-
   Widget _buildGradientButton(
     BuildContext context,
     String text,
+    Color startColor,
+    Color endColor,
     VoidCallback onPressed,
   ) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF998BCF), Color(0xFFB8A8E6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          colors: [startColor, endColor],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF998BCF).withOpacity(0.4),
+            color: startColor.withOpacity(0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          minimumSize: const Size(200, 50),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-        ),
-        child: Text(
-          text,
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onPressed,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  text,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.arrow_forward_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+class _DotsPainter extends CustomPainter {
+  final Color dotColor;
+
+  _DotsPainter(this.dotColor);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = dotColor;
+    const spacing = 60.0;
+
+    for (double x = 0; x < size.width; x += spacing) {
+      for (double y = 0; y < size.height; y += spacing) {
+        canvas.drawCircle(Offset(x, y), 2, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+Widget _buildSolidButton(
+  BuildContext context,
+  String text,
+  Color color,
+  VoidCallback onPressed,
+) {
+  return Container(
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(12),
+      color: color,
+      boxShadow: [
+        BoxShadow(
+          color: color.withOpacity(0.2),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onPressed,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                text,
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }

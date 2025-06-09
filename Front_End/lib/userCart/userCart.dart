@@ -1,4 +1,5 @@
 import 'package:cadeau_project/Categories/ListCategories.dart';
+import 'package:cadeau_project/User_Profile/user_profile.dart';
 import 'package:cadeau_project/checkout_process/giftbox_webview.dart';
 import 'package:cadeau_project/checkout_process/move_to_checkout_and_pay.dart';
 import 'package:cadeau_project/home_page_payment.dart';
@@ -137,7 +138,7 @@ class _CartWidgetState extends State<CartWidget> {
           title: Text(
             'My Shopping Cart',
             style: FlutterFlowTheme.of(context)?.headlineMedium?.copyWith(
-              color: FlutterFlowTheme.of(context)?.primaryText ?? Colors.black,
+              color: Colors.black ?? Colors.black,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -147,7 +148,7 @@ class _CartWidgetState extends State<CartWidget> {
               padding: EdgeInsets.only(right: 16),
               child: Icon(
                 Icons.shopping_cart_checkout_rounded,
-                color: FlutterFlowTheme.of(context)?.primary ?? Colors.blue,
+                color: Colors.black ?? Colors.blue,
                 size: 28,
               ),
             ),
@@ -159,7 +160,7 @@ class _CartWidgetState extends State<CartWidget> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(
                 child: CircularProgressIndicator(
-                  color: FlutterFlowTheme.of(context)?.primary ?? Colors.blue,
+                  color: Colors.white ?? Colors.blue,
                 ),
               );
             } else if (snapshot.hasError) {
@@ -245,7 +246,89 @@ class _CartWidgetState extends State<CartWidget> {
             }
           },
         ),
-        bottomNavigationBar: _buildBottomNavigationBar(context),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                spreadRadius: 0,
+                blurRadius: 16,
+                offset: Offset(0, -4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            child: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: (index) {
+                if (index == _currentIndex) return;
+                setState(() => _currentIndex = index);
+
+                Widget nextPage;
+                switch (index) {
+                  case 0:
+                    nextPage = userHomePage(userId: widget.userId);
+                    break;
+                  case 1:
+                    nextPage = CategoriesPage(userId: widget.userId);
+                    break;
+                  case 2:
+                    nextPage = CartWidget(userId: widget.userId);
+                    break;
+                  case 3:
+                    nextPage = Profile16SimpleProfileWidget(
+                      userId: widget.userId,
+                    );
+                    break;
+                  default:
+                    return;
+                }
+
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => nextPage),
+                );
+              },
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.white,
+              selectedItemColor: Color.fromARGB(255, 124, 177, 255),
+              unselectedItemColor: Colors.grey[600],
+              selectedLabelStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.normal,
+              ),
+              showSelectedLabels: true,
+              showUnselectedLabels: true,
+              items: [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  activeIcon: Icon(Icons.home),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.category_outlined),
+                  activeIcon: Icon(Icons.category),
+                  label: 'Categories',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.shopping_cart_outlined),
+                  activeIcon: Icon(Icons.shopping_cart),
+                  label: 'Cart',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outlined),
+                  activeIcon: Icon(Icons.person),
+                  label: 'Profile',
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -291,7 +374,7 @@ class _CartWidgetState extends State<CartWidget> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor:
-                  FlutterFlowTheme.of(context)?.primary ?? Colors.blue,
+                  Color.fromARGB(255, 124, 177, 255) ?? Colors.blue,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -314,8 +397,7 @@ class _CartWidgetState extends State<CartWidget> {
   Widget _buildCartItem(CartItem item) {
     return Container(
       decoration: BoxDecoration(
-        color:
-            FlutterFlowTheme.of(context)?.secondaryBackground ?? Colors.white,
+        color: Color.fromARGB(255, 124, 177, 255) ?? Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -534,7 +616,7 @@ class _CartWidgetState extends State<CartWidget> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor:
-                  FlutterFlowTheme.of(context)?.primary ?? Colors.blue,
+                  Color.fromARGB(255, 124, 177, 255) ?? Colors.blue,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -550,97 +632,6 @@ class _CartWidgetState extends State<CartWidget> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNavigationBar(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            spreadRadius: 0,
-            blurRadius: 16,
-            offset: Offset(0, -4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            if (index == _currentIndex) return;
-            setState(() => _currentIndex = index);
-
-            Widget nextPage;
-            switch (index) {
-              case 0:
-                nextPage = userHomePage(userId: widget.userId);
-                break;
-              case 1:
-                nextPage = CategoriesPage(userId: widget.userId);
-                break;
-              case 2:
-                nextPage = CartWidget(userId: widget.userId);
-                break;
-              case 3:
-                nextPage = CartWidget(userId: widget.userId); // Replace later
-                break;
-              default:
-                return;
-            }
-
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => nextPage),
-            );
-          },
-          type: BottomNavigationBarType.fixed,
-          backgroundColor:
-              FlutterFlowTheme.of(context)?.secondaryBackground ?? Colors.white,
-          selectedItemColor:
-              FlutterFlowTheme.of(context)?.primary ?? Colors.blue,
-          unselectedItemColor:
-              FlutterFlowTheme.of(context)?.secondaryText ?? Colors.grey,
-          selectedLabelStyle: FlutterFlowTheme.of(context)?.labelSmall,
-          unselectedLabelStyle: FlutterFlowTheme.of(context)?.labelSmall,
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home_rounded),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.category_outlined),
-              activeIcon: Icon(Icons.category_rounded),
-              label: 'Categories',
-            ),
-            BottomNavigationBarItem(
-              icon: badges.Badge(
-                badgeStyle: badges.BadgeStyle(
-                  badgeColor:
-                      FlutterFlowTheme.of(context)?.primary ?? Colors.blue,
-                ),
-                child: Icon(Icons.shopping_cart_outlined),
-              ),
-              activeIcon: badges.Badge(
-                badgeStyle: badges.BadgeStyle(
-                  badgeColor:
-                      FlutterFlowTheme.of(context)?.primary ?? Colors.blue,
-                ),
-                child: Icon(Icons.shopping_cart_rounded),
-              ),
-              label: 'Cart',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person_rounded),
-              label: 'Profile',
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -32,7 +32,7 @@ class _Profile16SimpleProfileWidgetState
   bool isDarkMode = false;
   String selectedCurrency = 'USD';
   final List<String> currencies = ['USD', 'EUR', 'GBP', 'JPY', 'AED'];
-
+  int _currentIndex = 3;
   @override
   void initState() {
     super.initState();
@@ -42,7 +42,6 @@ class _Profile16SimpleProfileWidgetState
   }
 
   Future<void> _loadUserPreferences() async {
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       selectedCurrency = prefs.getString('currency') ?? 'USD';
@@ -124,11 +123,6 @@ class _Profile16SimpleProfileWidgetState
     });
   }
 
-  Future<void> _toggleDarkMode(bool value) async {
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    await themeProvider.toggleTheme(value);
-  }
-
   Widget _buildPointsCard() {
     // Convert all integer values to double explicitly
     final availablePoints = (pointsData?['availablePoints'] ?? 0).toDouble();
@@ -168,7 +162,7 @@ class _Profile16SimpleProfileWidgetState
               children: [
                 LinearProgressIndicator(
                   value: progress,
-                  backgroundColor: Colors.grey[200],
+                  backgroundColor: const Color.fromARGB(255, 255, 255, 255),
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
                   minHeight: 10,
                   borderRadius: BorderRadius.circular(5),
@@ -198,7 +192,7 @@ class _Profile16SimpleProfileWidgetState
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 164, 145, 240),
+                        color: Color.fromARGB(255, 124, 177, 255),
                       ),
                     ),
                   ],
@@ -209,7 +203,7 @@ class _Profile16SimpleProfileWidgetState
                           ? () => _showRedeemDialog(context)
                           : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromARGB(255, 164, 145, 240),
+                    backgroundColor: Color.fromARGB(255, 124, 177, 255),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -353,7 +347,7 @@ class _Profile16SimpleProfileWidgetState
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromARGB(255, 164, 145, 240),
+                    backgroundColor: Color.fromARGB(255, 124, 177, 255),
                   ),
                   child: Text('Redeem'),
                 ),
@@ -380,7 +374,7 @@ class _Profile16SimpleProfileWidgetState
     VoidCallback? onTap,
   }) {
     return ListTile(
-      leading: Icon(icon, color: Color.fromARGB(255, 164, 145, 240)),
+      leading: Icon(icon, color: Color.fromARGB(255, 124, 177, 255)),
       title: Text(title),
       trailing: trailing ?? Icon(Icons.chevron_right, color: Colors.grey),
       onTap: onTap,
@@ -389,324 +383,333 @@ class _Profile16SimpleProfileWidgetState
 
   @override
   Widget build(BuildContext context) {
-    bool isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
-    return Theme(
-      data: isDarkMode ? ThemeData.dark() : ThemeData.light(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('My Profile'),
-          centerTitle: true,
-          elevation: 0,
-          actions: [
-            IconButton(
-              icon: Icon(Icons.star, color: Colors.amber),
-              onPressed: () {},
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text('My Profile'),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.white, // White app bar background
+        actions: [
+          IconButton(
+            icon: Icon(Icons.star, color: Colors.amber),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: Icon(Icons.edit, color: Colors.black),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body:
+          isLoading || isPointsLoading
+              ? Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 50,
+                            backgroundImage:
+                                userData?['avatarUrl'] != null &&
+                                        userData!['avatarUrl'].isNotEmpty
+                                    ? NetworkImage(userData!['avatarUrl'])
+                                    : AssetImage('assets/images/usermira.jpg')
+                                        as ImageProvider,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            userData?['name'] ?? 'User',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black, // Black text
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            userData?['email'] ?? 'email@example.com',
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 24),
+                    _buildPointsCard(),
+                    SizedBox(height: 24),
+                    Text(
+                      'ACCOUNT SETTINGS',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    _buildSettingsCard(
+                      children: [
+                        _buildSettingsItem(
+                          icon: Icons.person_outline,
+                          title: 'Personal Information',
+                          onTap: () {},
+                        ),
+                        Divider(height: 1),
+                        _buildSettingsItem(
+                          icon: Icons.location_on_outlined,
+                          title: 'Shipping Addresses',
+                          onTap: () {},
+                        ),
+                        Divider(height: 1),
+                        _buildSettingsItem(
+                          icon: Icons.credit_card_outlined,
+                          title: 'Payment Methods',
+                          onTap: () {},
+                        ),
+                        Divider(height: 1),
+                        _buildSettingsItem(
+                          icon: Icons.notifications_outlined,
+                          title: 'Notifications',
+                          onTap: () {},
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 24),
+                    Text(
+                      'APP SETTINGS',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    _buildSettingsCard(
+                      children: [
+                        Divider(height: 1),
+                        _buildSettingsItem(
+                          icon: Icons.currency_exchange,
+                          title: 'Currency',
+                          trailing: DropdownButton<String>(
+                            value: selectedCurrency,
+                            underline: Container(),
+                            items:
+                                currencies.map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                }).toList(),
+                            onChanged: (newValue) {
+                              if (newValue != null) {
+                                _changeCurrency(newValue);
+                              }
+                            },
+                          ),
+                        ),
+                        Divider(height: 1),
+                        _buildSettingsItem(
+                          icon: Icons.language_outlined,
+                          title: 'Language',
+                          trailing: Text('English'),
+                          onTap: () {},
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 24),
+                    Text(
+                      'ACTIONS',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    _buildSettingsCard(
+                      children: [
+                        _buildSettingsItem(
+                          icon: Icons.shopping_bag_outlined,
+                          title: 'My Orders',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        UsersOrders(userId: widget.userId),
+                              ),
+                            );
+                          },
+                        ),
+                        Divider(height: 1),
+                        _buildSettingsItem(
+                          icon: Icons.favorite_outline,
+                          title: 'Wishlist',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        UsersFavorite(userId: widget.userId),
+                              ),
+                            );
+                          },
+                        ),
+                        Divider(height: 1),
+                        _buildSettingsItem(
+                          icon: Icons.star_outline,
+                          title: 'Reviews',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        UsersReviews(userId: widget.userId),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 24),
+                    Text(
+                      'SUPPORT',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    _buildSettingsCard(
+                      children: [
+                        _buildSettingsItem(
+                          icon: Icons.help_outline,
+                          title: 'Help Center',
+                          onTap: () {},
+                        ),
+                        Divider(height: 1),
+                        _buildSettingsItem(
+                          icon: Icons.headset_mic_outlined,
+                          title: 'Contact Us',
+                          onTap: () {},
+                        ),
+                        Divider(height: 1),
+                        _buildSettingsItem(
+                          icon: Icons.privacy_tip_outlined,
+                          title: 'Privacy Policy',
+                          onTap: () {},
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 24),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color.fromARGB(255, 124, 177, 255),
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 40,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        child: Text('Log Out'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              spreadRadius: 0,
+              blurRadius: 16,
+              offset: Offset(0, -4),
             ),
-            IconButton(icon: Icon(Icons.edit), onPressed: () {}),
           ],
         ),
-        body:
-            isLoading || isPointsLoading
-                ? Center(child: CircularProgressIndicator())
-                : SingleChildScrollView(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Column(
-                          children: [
-                            CircleAvatar(
-                              radius: 50,
-                              backgroundImage: NetworkImage(
-                                userData?['avatarUrl'] ??
-                                    'https://via.placeholder.com/150',
-                              ),
-                            ),
-                            SizedBox(height: 16),
-                            Text(
-                              userData?['name'] ?? 'User',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              userData?['email'] ?? 'email@example.com',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 24),
-                      _buildPointsCard(),
-                      SizedBox(height: 24),
-                      Text(
-                        'ACCOUNT SETTINGS',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      _buildSettingsCard(
-                        children: [
-                          _buildSettingsItem(
-                            icon: Icons.person_outline,
-                            title: 'Personal Information',
-                            onTap: () {},
-                          ),
-                          Divider(height: 1),
-                          _buildSettingsItem(
-                            icon: Icons.location_on_outlined,
-                            title: 'Shipping Addresses',
-                            onTap: () {},
-                          ),
-                          Divider(height: 1),
-                          _buildSettingsItem(
-                            icon: Icons.credit_card_outlined,
-                            title: 'Payment Methods',
-                            onTap: () {},
-                          ),
-                          Divider(height: 1),
-                          _buildSettingsItem(
-                            icon: Icons.notifications_outlined,
-                            title: 'Notifications',
-                            onTap: () {},
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 24),
-                      Text(
-                        'APP SETTINGS',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      _buildSettingsCard(
-                        children: [
-                          _buildSettingsItem(
-                            icon: Icons.dark_mode_outlined,
-                            title: 'Dark Mode',
-                            trailing: Switch(
-                              value: isDarkMode,
-                              onChanged: _toggleDarkMode,
-                              activeColor: Color.fromARGB(255, 164, 145, 240),
-                            ),
-                          ),
-                          Divider(height: 1),
-                          _buildSettingsItem(
-                            icon: Icons.currency_exchange,
-                            title: 'Currency',
-                            trailing: DropdownButton<String>(
-                              value: selectedCurrency,
-                              underline: Container(),
-                              items:
-                                  currencies.map((String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(value),
-                                    );
-                                  }).toList(),
-                              onChanged: (newValue) {
-                                if (newValue != null) {
-                                  _changeCurrency(newValue);
-                                }
-                              },
-                            ),
-                          ),
-                          Divider(height: 1),
-                          _buildSettingsItem(
-                            icon: Icons.language_outlined,
-                            title: 'Language',
-                            trailing: Text('English'),
-                            onTap: () {},
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 24),
-                      Text(
-                        'ACTIONS',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      _buildSettingsCard(
-                        children: [
-                          _buildSettingsItem(
-                            icon: Icons.shopping_bag_outlined,
-                            title: 'My Orders',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) =>
-                                          UsersOrders(userId: widget.userId),
-                                ),
-                              );
-                            },
-                          ),
-                          Divider(height: 1),
-                          _buildSettingsItem(
-                            icon: Icons.favorite_outline,
-                            title: 'Wishlist',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) =>
-                                          UsersFavorite(userId: widget.userId),
-                                ),
-                              );
-                            },
-                          ),
-                          Divider(height: 1),
-                          _buildSettingsItem(
-                            icon: Icons.star_outline,
-                            title: 'Reviews',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) =>
-                                          UsersReviews(userId: widget.userId),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 24),
-                      Text(
-                        'SUPPORT',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      _buildSettingsCard(
-                        children: [
-                          _buildSettingsItem(
-                            icon: Icons.help_outline,
-                            title: 'Help Center',
-                            onTap: () {},
-                          ),
-                          Divider(height: 1),
-                          _buildSettingsItem(
-                            icon: Icons.headset_mic_outlined,
-                            title: 'Contact Us',
-                            onTap: () {},
-                          ),
-                          Divider(height: 1),
-                          _buildSettingsItem(
-                            icon: Icons.privacy_tip_outlined,
-                            title: 'Privacy Policy',
-                            onTap: () {},
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 24),
-                      Center(
-                        child: ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color.fromARGB(255, 164, 145, 240),
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 40,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: Text('Log Out'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: 3,
-          onTap: (index) {
-            if (index == 3) return;
+        child: ClipRRect(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          child: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: (index) {
+              if (index == _currentIndex) return;
+              setState(() => _currentIndex = index);
 
-            if (index == 0) {
+              Widget nextPage;
+              switch (index) {
+                case 0:
+                  nextPage = userHomePage(userId: widget.userId);
+                  break;
+                case 1:
+                  nextPage = CategoriesPage(userId: widget.userId);
+                  break;
+                case 2:
+                  nextPage = CartWidget(userId: widget.userId);
+                  break;
+                case 3:
+                  nextPage = Profile16SimpleProfileWidget(
+                    userId: widget.userId,
+                  );
+                  break;
+                default:
+                  return;
+              }
+
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => userHomePage(userId: widget.userId),
-                ),
+                MaterialPageRoute(builder: (context) => nextPage),
               );
-            } else if (index == 1) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CategoriesPage(userId: widget.userId),
-                ),
-              );
-            } else if (index == 2) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CartWidget(userId: widget.userId),
-                ),
-              );
-            }
-          },
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: Color.fromARGB(255, 164, 145, 240),
-          unselectedItemColor: Colors.grey[600],
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(
-                Icons.home,
-                color: Color.fromARGB(255, 164, 145, 240),
-              ),
-              label: 'Home',
+            },
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.white,
+            selectedItemColor: Color.fromARGB(255, 124, 177, 255),
+            unselectedItemColor: Colors.grey[600],
+            selectedLabelStyle: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.category_outlined),
-              activeIcon: Icon(
-                Icons.category,
-                color: Color.fromARGB(255, 164, 145, 240),
-              ),
-              label: 'Categories',
+            unselectedLabelStyle: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.normal,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_cart_outlined),
-              activeIcon: Icon(
-                Icons.shopping_cart,
-                color: Color.fromARGB(255, 164, 145, 240),
+            showSelectedLabels: true,
+            showUnselectedLabels: true,
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home_outlined),
+                activeIcon: Icon(Icons.home),
+                label: 'Home',
               ),
-              label: 'Cart',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outlined),
-              activeIcon: Icon(
-                Icons.person,
-                color: Color.fromARGB(255, 164, 145, 240),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.category_outlined),
+                activeIcon: Icon(Icons.category),
+                label: 'Categories',
               ),
-              label: 'Me',
-            ),
-          ],
+              BottomNavigationBarItem(
+                icon: Icon(Icons.shopping_cart_outlined),
+                activeIcon: Icon(Icons.shopping_cart),
+                label: 'Cart',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_outlined),
+                activeIcon: Icon(Icons.person),
+                label: 'Profile',
+              ),
+            ],
+          ),
         ),
       ),
     );

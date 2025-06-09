@@ -115,7 +115,12 @@ Future<Map<String, dynamic>?> handleSignup(
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (context) => Center(child: CircularProgressIndicator()),
+    builder:
+        (context) => Center(
+          child: CircularProgressIndicator(
+            color: Color.fromARGB(255, 124, 177, 255),
+          ),
+        ),
   );
 
   try {
@@ -351,10 +356,11 @@ class _HomePageWidgetState extends State<HomePageWidget>
         const SizedBox(height: 16),
         Text(
           'Cadeau',
-          style: GoogleFonts.dancingScript(
-            fontSize: 42,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF998BCF),
+          style: GoogleFonts.pacifico(
+            fontSize: 38,
+            fontWeight: FontWeight.w100,
+            letterSpacing: 1.5,
+            color: Color.fromARGB(255, 124, 177, 255),
           ),
         ),
         Text(
@@ -372,9 +378,9 @@ class _HomePageWidgetState extends State<HomePageWidget>
       ),
       child: TabBar(
         controller: _model.tabBarController,
-        labelColor: Color(0xFF998BCF),
+        labelColor: Color.fromARGB(255, 124, 177, 255),
         unselectedLabelColor: Colors.grey,
-        indicatorColor: Color(0xFF998BCF),
+        indicatorColor: Color.fromARGB(255, 124, 177, 255),
         indicatorWeight: 3,
         tabs: [
           Tab(
@@ -574,7 +580,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
               child: Text(
                 'Forgot Password?',
                 style: GoogleFonts.poppins(
-                  color: Color(0xFF998BCF),
+                  color: Color.fromARGB(255, 255, 180, 68),
                   fontSize: 12,
                 ),
               ),
@@ -612,7 +618,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
                 child: Text(
                   'Sign Up',
                   style: GoogleFonts.poppins(
-                    color: Color(0xFF998BCF),
+                    color: Color.fromARGB(255, 255, 180, 68),
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -662,7 +668,10 @@ class _HomePageWidgetState extends State<HomePageWidget>
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFF998BCF), width: 1),
+          borderSide: BorderSide(
+            color: Color.fromARGB(255, 124, 177, 255),
+            width: 1,
+          ),
         ),
       ),
     );
@@ -678,7 +687,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF998BCF),
+          backgroundColor: Color.fromARGB(255, 124, 177, 255),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

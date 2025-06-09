@@ -1,4 +1,5 @@
 import 'package:cadeau_project/Categories/CategoryProductsPage.dart';
+import 'package:cadeau_project/User_Profile/user_profile.dart';
 import 'package:cadeau_project/custom/theme.dart';
 import 'package:cadeau_project/userCart/userCart.dart';
 import 'package:cadeau_project/userHomePage/userHomePage.dart';
@@ -32,10 +33,14 @@ class _CategoriesPageState extends State<CategoriesPage> {
       activeIcon: Container(
         padding: EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Color(0xFF6F61EF).withOpacity(0.1),
+          color: Color.fromARGB(255, 255, 180, 68).withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(Icons.home, color: Color(0xFF6F61EF), size: 24),
+        child: Icon(
+          Icons.home,
+          color: Color.fromARGB(255, 124, 177, 255),
+          size: 24,
+        ),
       ),
       label: 'Home',
     ),
@@ -48,10 +53,14 @@ class _CategoriesPageState extends State<CategoriesPage> {
       activeIcon: Container(
         padding: EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Color(0xFF6F61EF).withOpacity(0.1),
+          color: Color.fromARGB(255, 255, 180, 68).withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(Icons.category, color: Color(0xFF6F61EF), size: 24),
+        child: Icon(
+          Icons.category,
+          color: Color.fromARGB(255, 124, 177, 255),
+          size: 24,
+        ),
       ),
       label: 'Categories',
     ),
@@ -64,10 +73,14 @@ class _CategoriesPageState extends State<CategoriesPage> {
       activeIcon: Container(
         padding: EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Color(0xFF6F61EF).withOpacity(0.1),
+          color: Color.fromARGB(255, 255, 180, 68).withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(Icons.shopping_cart, color: Color(0xFF6F61EF), size: 24),
+        child: Icon(
+          Icons.shopping_cart,
+          color: Color.fromARGB(255, 124, 177, 255),
+          size: 24,
+        ),
       ),
       label: 'Cart',
     ),
@@ -80,10 +93,14 @@ class _CategoriesPageState extends State<CategoriesPage> {
       activeIcon: Container(
         padding: EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Color(0xFF6F61EF).withOpacity(0.1),
+          color: Color.fromARGB(255, 255, 180, 68).withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(Icons.person, color: Color(0xFF6F61EF), size: 24),
+        child: Icon(
+          Icons.person,
+          color: Color.fromARGB(255, 124, 177, 255),
+          size: 24,
+        ),
       ),
       label: 'Profile',
     ),
@@ -208,17 +225,17 @@ class _CategoriesPageState extends State<CategoriesPage> {
       ),
       body: RefreshIndicator(
         onRefresh: _fetchCategories,
-        color: Color(0xFF6F61EF),
+        color: Color.fromARGB(255, 124, 177, 255),
         child: _buildContent(),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.black.withOpacity(0.1),
               spreadRadius: 0,
-              blurRadius: 10,
-              offset: Offset(0, -5),
+              blurRadius: 16,
+              offset: Offset(0, -4),
             ),
           ],
         ),
@@ -228,41 +245,36 @@ class _CategoriesPageState extends State<CategoriesPage> {
             currentIndex: _currentIndex,
             onTap: (index) {
               if (index == _currentIndex) return;
-
               setState(() => _currentIndex = index);
 
-              if (index == 0) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => userHomePage(userId: widget.userId),
-                  ),
-                );
-              } else if (index == 1) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CategoriesPage(userId: widget.userId),
-                  ),
-                );
-              } else if (index == 2) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CartWidget(userId: widget.userId),
-                  ),
-                );
-              } else if (index == 3) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CartWidget(userId: widget.userId),
-                  ),
-                );
+              Widget nextPage;
+              switch (index) {
+                case 0:
+                  nextPage = userHomePage(userId: widget.userId);
+                  break;
+                case 1:
+                  nextPage = CategoriesPage(userId: widget.userId);
+                  break;
+                case 2:
+                  nextPage = CartWidget(userId: widget.userId);
+                  break;
+                case 3:
+                  nextPage = Profile16SimpleProfileWidget(
+                    userId: widget.userId,
+                  );
+                  break;
+                default:
+                  return;
               }
+
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => nextPage),
+              );
             },
             type: BottomNavigationBarType.fixed,
-            selectedItemColor: Color(0xFF6F61EF),
+            backgroundColor: Colors.white,
+            selectedItemColor: Color.fromARGB(255, 124, 177, 255),
             unselectedItemColor: Colors.grey[600],
             selectedLabelStyle: TextStyle(
               fontSize: 12,
@@ -272,11 +284,30 @@ class _CategoriesPageState extends State<CategoriesPage> {
               fontSize: 12,
               fontWeight: FontWeight.normal,
             ),
-            backgroundColor: Colors.white,
-            elevation: 0,
             showSelectedLabels: true,
             showUnselectedLabels: true,
-            items: _bottomNavItems,
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home_outlined),
+                activeIcon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.category_outlined),
+                activeIcon: Icon(Icons.category),
+                label: 'Categories',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.shopping_cart_outlined),
+                activeIcon: Icon(Icons.shopping_cart),
+                label: 'Cart',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_outlined),
+                activeIcon: Icon(Icons.person),
+                label: 'Profile',
+              ),
+            ],
           ),
         ),
       ),
@@ -289,7 +320,9 @@ class _CategoriesPageState extends State<CategoriesPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: Color(0xFF6F61EF)),
+            CircularProgressIndicator(
+              color: Color.fromARGB(255, 124, 177, 255),
+            ),
             SizedBox(height: 16),
             Text(
               'Loading categories...',
@@ -326,7 +359,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF6F61EF),
+                  backgroundColor: Color.fromARGB(255, 124, 177, 255),
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                   shape: RoundedRectangleBorder(
@@ -417,7 +450,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                         placeholder:
                             (context, url) => Center(
                               child: CircularProgressIndicator(
-                                color: Color(0xFF6F61EF),
+                                color: Color.fromARGB(255, 124, 177, 255),
                               ),
                             ),
                         errorWidget: (context, url, error) {
@@ -458,7 +491,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                           ),
                           child: Icon(
                             _getIconFromString(icon),
-                            color: Color(0xFF6F61EF),
+                            color: Color.fromARGB(255, 124, 177, 255),
                             size: 20,
                           ),
                         ),
@@ -571,7 +604,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                         },
                         child: Text('Search'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF6F61EF),
+                          backgroundColor: Color.fromARGB(255, 124, 177, 255),
                           foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(
                             horizontal: 16,
@@ -624,7 +657,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
 //             Icon(
 //               Icons.category_rounded,
 //               size: 64,
-//               color: Color(0xFF6F61EF).withOpacity(0.2),
+//               color: Color.fromARGB(255, 255, 180, 68).withOpacity(0.2),
 //             ),
 //             SizedBox(height: 16),
 //             Text(

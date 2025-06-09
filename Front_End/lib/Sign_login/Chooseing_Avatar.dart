@@ -80,22 +80,15 @@ class _Chooseing_AvatarState extends State<Chooseing_Avatar> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF998BCF),
+        backgroundColor: Color.fromARGB(255, 124, 177, 255),
         automaticallyImplyLeading: false,
         title: Text(
           'Cadeau',
-          style: GoogleFonts.dancingScript(
-            color: Colors.white,
-            fontSize: 33,
-            letterSpacing: 0.0,
-            fontWeight: FontWeight.w700,
-            shadows: [
-              Shadow(
-                blurRadius: 2,
-                color: Colors.black.withOpacity(0.1),
-                offset: Offset(1, 1),
-              ),
-            ],
+          style: GoogleFonts.pacifico(
+            fontSize: 38,
+            fontWeight: FontWeight.w100,
+            letterSpacing: 1.5,
+            color: Color.fromARGB(255, 124, 177, 255),
           ),
         ),
         elevation: 2,
@@ -109,7 +102,7 @@ class _Chooseing_AvatarState extends State<Chooseing_Avatar> {
               fontSize: 16,
               fontFamily: 'Outfit',
               fontWeight: FontWeight.bold,
-              color: const Color.fromARGB(255, 134, 61, 179),
+              color: Color.fromARGB(255, 255, 180, 68),
             ),
             textAlign: TextAlign.center,
           ),
@@ -145,7 +138,7 @@ class _Chooseing_AvatarState extends State<Chooseing_Avatar> {
                             border: Border.all(
                               color:
                                   isSelected
-                                      ? Color(0xFF998BCF)
+                                      ? Color.fromARGB(255, 124, 177, 255)
                                       : Colors.transparent,
                               width: 4,
                             ),
@@ -170,7 +163,7 @@ class _Chooseing_AvatarState extends State<Chooseing_Avatar> {
                     }
                     : null,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF998BCF),
+              backgroundColor: Color.fromARGB(255, 124, 177, 255),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),

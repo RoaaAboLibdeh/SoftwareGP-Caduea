@@ -102,6 +102,9 @@ flutter:
     - assets/loading.json
     - assets/unboxing.json
     - assets/confetti.json
+    - assets/logo.json
+    - assets/sales2.json
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

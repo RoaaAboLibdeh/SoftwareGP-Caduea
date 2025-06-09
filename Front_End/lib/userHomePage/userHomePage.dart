@@ -9,6 +9,7 @@ import 'package:cadeau_project/searchResults/searchResult.dart';
 import 'package:cadeau_project/userCart/userCart.dart';
 import 'package:cadeau_project/userHomePage/userHomePage_model.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import '/custom/icon_button.dart';
 import '/custom/theme.dart';
 import '/custom/util.dart';
@@ -378,7 +379,10 @@ class _userHomePageState extends State<userHomePage> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: LinearGradient(
-                          colors: [Color(0xFF6F61EF), Color(0x4D9489F5)],
+                          colors: [
+                            Color.fromARGB(255, 124, 177, 255),
+                            Color.fromARGB(255, 255, 180, 68),
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -394,6 +398,12 @@ class _userHomePageState extends State<userHomePage> {
                                       width: 20,
                                       height: 20,
                                       child: CircularProgressIndicator(
+                                        color: Color.fromARGB(
+                                          255,
+                                          124,
+                                          177,
+                                          255,
+                                        ),
                                         strokeWidth: 2,
                                       ),
                                     ),
@@ -518,11 +528,14 @@ class _userHomePageState extends State<userHomePage> {
                     borderRadius: BorderRadius.circular(16),
                     child: Stack(
                       children: [
-                        Image.network(
-                          'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da',
+                        // Lottie animation that automatically repeats
+                        Lottie.asset(
+                          'assets/sales2.json',
                           height: 180,
                           width: double.infinity,
                           fit: BoxFit.cover,
+                          repeat:
+                              true, // This makes the animation loop indefinitely
                         ),
                         Container(
                           height: 180,
@@ -571,12 +584,20 @@ class _userHomePageState extends State<userHomePage> {
                                   );
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Color(0xFF6F61EF),
+                                  backgroundColor: Color.fromARGB(
+                                    255,
+                                    124,
+                                    177,
+                                    255,
+                                  ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: Text('Shop Now'),
+                                child: const Text(
+                                  'Shop Now',
+                                  style: TextStyle(color: Colors.white),
+                                ),
                               ),
                             ],
                           ),
@@ -702,75 +723,88 @@ class _userHomePageState extends State<userHomePage> {
         ),
       ),
 
-      // Bottom Navigation Bar
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          if (index == _currentIndex) return;
-          setState(() => _currentIndex = index);
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              spreadRadius: 0,
+              blurRadius: 16,
+              offset: Offset(0, -4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          child: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: (index) {
+              if (index == _currentIndex) return;
+              setState(() => _currentIndex = index);
 
-          switch (index) {
-            case 0:
+              Widget nextPage;
+              switch (index) {
+                case 0:
+                  nextPage = userHomePage(userId: widget.userId);
+                  break;
+                case 1:
+                  nextPage = CategoriesPage(userId: widget.userId);
+                  break;
+                case 2:
+                  nextPage = CartWidget(userId: widget.userId);
+                  break;
+                case 3:
+                  nextPage = Profile16SimpleProfileWidget(
+                    userId: widget.userId,
+                  );
+                  break;
+                default:
+                  return;
+              }
+
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => userHomePage(userId: widget.userId),
-                ),
+                MaterialPageRoute(builder: (context) => nextPage),
               );
-              break;
-            case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CategoriesPage(userId: widget.userId),
-                ),
-              );
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CartWidget(userId: widget.userId),
-                ),
-              );
-              break;
-            case 3:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (context) =>
-                          Profile16SimpleProfileWidget(userId: widget.userId),
-                ),
-              );
-              break;
-          }
-        },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Color(0xFF6F61EF),
-        unselectedItemColor: Colors.grey,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
+            },
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.white,
+            selectedItemColor: Color.fromARGB(255, 124, 177, 255),
+            unselectedItemColor: Colors.grey[600],
+            selectedLabelStyle: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+            unselectedLabelStyle: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.normal,
+            ),
+            showSelectedLabels: true,
+            showUnselectedLabels: true,
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home_outlined),
+                activeIcon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.category_outlined),
+                activeIcon: Icon(Icons.category),
+                label: 'Categories',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.shopping_cart_outlined),
+                activeIcon: Icon(Icons.shopping_cart),
+                label: 'Cart',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_outlined),
+                activeIcon: Icon(Icons.person),
+                label: 'Profile',
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.category_outlined),
-            activeIcon: Icon(Icons.category),
-            label: 'Categories',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart_outlined),
-            activeIcon: Icon(Icons.shopping_cart),
-            label: 'Cart',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outlined),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+        ),
       ),
     );
   }
