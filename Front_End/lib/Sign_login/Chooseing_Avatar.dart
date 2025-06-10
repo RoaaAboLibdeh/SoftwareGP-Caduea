@@ -80,7 +80,7 @@ class _Chooseing_AvatarState extends State<Chooseing_Avatar> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 124, 177, 255),
+        backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
         title: Text(
           'Cadeau',

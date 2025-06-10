@@ -658,7 +658,9 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
             backgroundColor:
                 _isInCart
                     ? Colors.green
-                    : (product.stock > 0 ? theme.primary : Colors.grey[400]),
+                    : (product.stock > 0
+                        ? Color.fromARGB(255, 124, 177, 255)
+                        : Colors.grey[400]),
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -987,7 +989,7 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
             width: double.infinity,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: FlutterFlowTheme.of(context).primary,
+                backgroundColor: Color.fromARGB(255, 124, 177, 255),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -1053,6 +1055,7 @@ class _ProductDetailsWidgetState extends State<ProductDetailsWidget> {
                     SnackBar(
                       content: Text('Error: ${e.toString()}'),
                       behavior: SnackBarBehavior.floating,
+                      backgroundColor: Color.fromARGB(255, 124, 177, 255),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),

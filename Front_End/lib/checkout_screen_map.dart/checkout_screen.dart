@@ -164,7 +164,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             fontSize: 14,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.3,
-            color: Color.fromARGB(255, 79, 6, 6),
+            color: Colors.black,
           ),
         ),
         backgroundColor: Color(0xFFF7F7F7),
@@ -191,7 +191,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           children: [
                             const Icon(
                               Icons.location_pin,
-                              color: Colors.deepPurple,
+                              color: Color.fromARGB(255, 124, 177, 255),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -278,14 +278,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 79, 6, 6),
+              backgroundColor: Color.fromARGB(255, 124, 177, 255),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
             child: const Text(
               'Proceed to Payment',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white, // Set text color to white
+              ),
             ),
           ),
         ),

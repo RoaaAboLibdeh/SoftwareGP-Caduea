@@ -166,7 +166,7 @@ class _RandomBoxSelectionPageState extends State<RandomBoxSelectionPage>
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 137, 52, 52),
+                          color: Colors.black,
                         ),
                       ),
                       SizedBox(height: 8),
@@ -309,9 +309,9 @@ class _RandomBoxSelectionPageState extends State<RandomBoxSelectionPage>
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 7, 7, 7),
+                        backgroundColor: Color.fromARGB(255, 124, 177, 255),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         padding: EdgeInsets.symmetric(vertical: 16),
                         minimumSize: Size(double.infinity, 0),
@@ -367,41 +367,3 @@ class PriceTier {
     required this.color,
   });
 }
-
-// class HomePagePaymentWrapper extends StatefulWidget {
-//   final String userId;
-//   final PriceTier priceTier;
-
-//   const HomePagePaymentWrapper({
-//     Key? key,
-//     required this.userId,
-//     required this.priceTier,
-//   }) : super(key: key);
-
-//   @override
-//   _HomePagePaymentWrapperState createState() => _HomePagePaymentWrapperState();
-// }
-
-// class _HomePagePaymentWrapperState extends State<HomePagePaymentWrapper> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text('Card Payment')),
-//       body: HomePagePayment(
-//         onPaymentSuccess: () {
-//           Navigator.pushReplacement(
-//             context,
-//             MaterialPageRoute(
-//               builder:
-//                   (context) => RandomBoxPage(
-//                     userId: widget.userId,
-//                     priceTier: widget.priceTier,
-//                   ),
-//             ),
-//           );
-//         },
-//         // amount: widget.priceTier.price.toDouble(),
-//       ),
-//     );
-//   }
-// }

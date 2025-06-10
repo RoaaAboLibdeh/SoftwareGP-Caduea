@@ -206,7 +206,7 @@ class _AvatarChatPageState extends State<AvatarChatPage> {
             ),
           ],
         ),
-        backgroundColor: const Color(0xFF6F61EF),
+        backgroundColor: Color.fromARGB(255, 124, 177, 255),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -222,7 +222,7 @@ class _AvatarChatPageState extends State<AvatarChatPage> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    const Color(0xFF6F61EF).withOpacity(0.05),
+                    const Color.fromARGB(255, 124, 177, 255),
                     Colors.white,
                   ],
                 ),
@@ -314,7 +314,7 @@ class _AvatarChatPageState extends State<AvatarChatPage> {
           ),
           const SizedBox(width: 8),
           CircleAvatar(
-            backgroundColor: const Color(0xFF6F61EF),
+            backgroundColor: Color.fromARGB(255, 124, 177, 255),
             child: IconButton(
               icon: const Icon(Icons.send, color: Colors.white, size: 20),
               onPressed: _sendMessage,
@@ -367,7 +367,9 @@ class ChatBubble extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color:
-                        isAvatar ? Colors.grey[100] : const Color(0xFF6F61EF),
+                        isAvatar
+                            ? Colors.grey[100]
+                            : Color.fromARGB(255, 124, 177, 255),
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(isAvatar ? 0 : 16),
                       topRight: const Radius.circular(16),

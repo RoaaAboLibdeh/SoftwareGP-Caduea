@@ -138,7 +138,7 @@ class _RandomBoxPageState extends State<RandomBoxPage>
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF6F61EF),
+                          color: Colors.black,
                         ),
                       ),
                     ],
@@ -230,7 +230,7 @@ class _RandomBoxPageState extends State<RandomBoxPage>
                                       style: TextStyle(
                                         fontSize: 24,
                                         fontWeight: FontWeight.bold,
-                                        color: Color(0xFF6F61EF),
+                                        color: Colors.black,
                                       ),
                                     ),
                                   ],
@@ -269,7 +269,7 @@ class _RandomBoxPageState extends State<RandomBoxPage>
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF6F61EF),
+                                  color: Colors.black,
                                 ),
                               ),
                               if (!_showAllItems)
@@ -278,7 +278,7 @@ class _RandomBoxPageState extends State<RandomBoxPage>
                                   child: Text(
                                     'Reveal All',
                                     style: TextStyle(
-                                      color: Color(0xFF6F61EF),
+                                      color: Color.fromARGB(255, 255, 180, 68),
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -410,7 +410,7 @@ class _RandomBoxPageState extends State<RandomBoxPage>
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF6F61EF),
+                            color: Colors.black,
                           ),
                         ),
                         if (product.discountAmount! > 0)
@@ -435,7 +435,7 @@ class _RandomBoxPageState extends State<RandomBoxPage>
               Column(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.favorite_border, color: Color(0xFF6F61EF)),
+                    icon: Icon(Icons.favorite_border, color: Colors.black),
                     onPressed: () {
                       // Add to favorites
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -446,10 +446,7 @@ class _RandomBoxPageState extends State<RandomBoxPage>
                     },
                   ),
                   IconButton(
-                    icon: Icon(
-                      Icons.add_shopping_cart,
-                      color: Color(0xFF6F61EF),
-                    ),
+                    icon: Icon(Icons.add_shopping_cart, color: Colors.black),
                     onPressed: () {
                       // Add to cart
                       ScaffoldMessenger.of(context).showSnackBar(

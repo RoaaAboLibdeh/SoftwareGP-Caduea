@@ -128,11 +128,9 @@ class _CartWidgetState extends State<CartWidget> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor:
-            FlutterFlowTheme.of(context)?.secondaryBackground ?? Colors.white,
+        backgroundColor: Colors.white ?? Colors.white,
         appBar: AppBar(
-          backgroundColor:
-              FlutterFlowTheme.of(context)?.secondaryBackground ?? Colors.white,
+          backgroundColor: Colors.white ?? Colors.white,
           automaticallyImplyLeading: false,
           elevation: 0,
           title: Text(
@@ -397,7 +395,7 @@ class _CartWidgetState extends State<CartWidget> {
   Widget _buildCartItem(CartItem item) {
     return Container(
       decoration: BoxDecoration(
-        color: Color.fromARGB(255, 124, 177, 255) ?? Colors.white,
+        color: Colors.white ?? Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -425,14 +423,10 @@ class _CartWidgetState extends State<CartWidget> {
                   (_, __, ___) => Container(
                     width: 100,
                     height: 100,
-                    color:
-                        FlutterFlowTheme.of(context)?.alternate ??
-                        Colors.grey[200],
+                    color: Colors.black ?? Colors.grey[200],
                     child: Icon(
                       Icons.image_not_supported_rounded,
-                      color:
-                          FlutterFlowTheme.of(context)?.secondaryText ??
-                          Colors.grey,
+                      color: Colors.black ?? Colors.grey,
                     ),
                   ),
             ),
@@ -445,9 +439,10 @@ class _CartWidgetState extends State<CartWidget> {
                 children: [
                   Text(
                     item.product.name ?? 'Unnamed Product',
-                    style: FlutterFlowTheme.of(
-                      context,
-                    )?.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                    style: FlutterFlowTheme.of(context)?.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -455,8 +450,7 @@ class _CartWidgetState extends State<CartWidget> {
                   Text(
                     '\$${(item.product.price ?? 0).toStringAsFixed(2)}',
                     style: FlutterFlowTheme.of(context)?.bodyMedium?.copyWith(
-                      color:
-                          FlutterFlowTheme.of(context)?.primary ?? Colors.blue,
+                      color: Colors.black ?? Colors.blue,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -468,7 +462,7 @@ class _CartWidgetState extends State<CartWidget> {
                         decoration: BoxDecoration(
                           border: Border.all(
                             color:
-                                FlutterFlowTheme.of(context)?.alternate ??
+                                Color.fromARGB(255, 124, 177, 255) ??
                                 Colors.grey[300]!,
                           ),
                           borderRadius: BorderRadius.circular(8),
@@ -479,9 +473,7 @@ class _CartWidgetState extends State<CartWidget> {
                               icon: Icon(
                                 Icons.remove,
                                 size: 18,
-                                color:
-                                    FlutterFlowTheme.of(context)?.primaryText ??
-                                    Colors.black,
+                                color: Colors.black ?? Colors.black,
                               ),
                               onPressed:
                                   item.quantity > 1
@@ -499,9 +491,7 @@ class _CartWidgetState extends State<CartWidget> {
                               icon: Icon(
                                 Icons.add,
                                 size: 18,
-                                color:
-                                    FlutterFlowTheme.of(context)?.primaryText ??
-                                    Colors.black,
+                                color: Colors.black ?? Colors.black,
                               ),
                               onPressed:
                                   () => _updateQuantity(
@@ -540,8 +530,7 @@ class _CartWidgetState extends State<CartWidget> {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color:
-            FlutterFlowTheme.of(context)?.secondaryBackground ?? Colors.white,
+        color: Colors.white ?? Colors.white,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(16),
           topRight: Radius.circular(16),
@@ -563,7 +552,9 @@ class _CartWidgetState extends State<CartWidget> {
               Text('Subtotal', style: FlutterFlowTheme.of(context)?.bodyMedium),
               Text(
                 '\$${subtotal.toStringAsFixed(2)}',
-                style: FlutterFlowTheme.of(context)?.bodyMedium,
+                style: FlutterFlowTheme.of(
+                  context,
+                )?.bodyMedium?.copyWith(color: Colors.black),
               ),
             ],
           ),
@@ -571,10 +562,18 @@ class _CartWidgetState extends State<CartWidget> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Shipping', style: FlutterFlowTheme.of(context)?.bodyMedium),
+              Text(
+                'Shipping',
+                style: FlutterFlowTheme.of(
+                  context,
+                )?.bodyMedium?.copyWith(color: Colors.black),
+              ),
+
               Text(
                 '\$${shipping.toStringAsFixed(2)}',
-                style: FlutterFlowTheme.of(context)?.bodyMedium,
+                style: FlutterFlowTheme.of(
+                  context,
+                )?.bodyMedium?.copyWith(color: Colors.black),
               ),
             ],
           ),
@@ -586,12 +585,13 @@ class _CartWidgetState extends State<CartWidget> {
                 'Total',
                 style: FlutterFlowTheme.of(
                   context,
-                )?.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                )?.headlineSmall?.copyWith(color: Colors.black),
               ),
+
               Text(
                 '\$${total.toStringAsFixed(2)}',
                 style: FlutterFlowTheme.of(context)?.headlineSmall?.copyWith(
-                  color: FlutterFlowTheme.of(context)?.primary ?? Colors.blue,
+                  color: Color.fromARGB(255, 255, 180, 68) ?? Colors.blue,
                   fontWeight: FontWeight.bold,
                 ),
               ),

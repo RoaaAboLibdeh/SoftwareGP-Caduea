@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:cadeau_project/keys.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,8 +11,13 @@ import 'Sign_login/Authentication.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Stripe.publishableKey = publishablekey;
-  await Stripe.instance.applySettings();
+  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+    Stripe.publishableKey = publishablekey;
+    await Stripe.instance.applySettings();
+  } else {
+    debugPrint("Stripe initialization skipped on web");
+  }
+  // runApp(const MyApp());
   runApp(const MyApp());
 }
 

@@ -39,7 +39,8 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
     'assets/images/card4.jpg',
     'assets/images/card5.jpg',
   ];
-
+  final Color blueColor = const Color.fromARGB(255, 124, 177, 255);
+  final Color orangeColor = const Color.fromARGB(255, 255, 180, 68);
   @override
   void dispose() {
     _nameController.dispose();
@@ -53,15 +54,19 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Create Your Gift Card'),
+        title: const Text(
+          'Create Your Gift Card',
+          style: TextStyle(color: Colors.black), // explicitly set to black
+        ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
+        foregroundColor: Colors.black, // changed from white to black
         systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -70,10 +75,10 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                '🎁 Personalize Your Gift',
+                'Personalize Your Gift',
                 style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  fontWeight: FontWeight.w700,
+                  color: const Color.fromARGB(221, 43, 71, 198),
                 ),
               ),
               const SizedBox(height: 8),
@@ -89,12 +94,14 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
                 label: 'Your Name',
                 controller: _nameController,
                 icon: Icons.person_outline,
+                iconColor: blueColor,
               ),
               const SizedBox(height: 20),
               _buildInputField(
                 label: "Recipient's Name",
                 controller: _recipientController,
                 icon: Icons.card_giftcard,
+                iconColor: blueColor,
               ),
               const SizedBox(height: 20),
               _buildInputField(
@@ -102,14 +109,15 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
                 controller: _messageController,
                 icon: Icons.message_outlined,
                 maxLines: 4,
+                iconColor: blueColor,
               ),
               const SizedBox(height: 30),
 
               Text(
-                '🖼️ Choose a Card Design',
+                'Choose a Card Design',
                 style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  fontWeight: FontWeight.w800,
+                  color: orangeColor,
                 ),
               ),
               const SizedBox(height: 15),
@@ -132,8 +140,8 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
                           border: Border.all(
                             color:
                                 isSelected
-                                    ? theme.colorScheme.primary
-                                    : Colors.grey[300]!,
+                                    ? blueColor
+                                    : const Color.fromARGB(255, 255, 255, 255)!,
                             width: isSelected ? 3 : 1,
                           ),
                           boxShadow: [
@@ -158,6 +166,24 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
               ),
               const SizedBox(height: 40),
 
+              ElevatedButton.icon(
+                onPressed: () {
+                  _showPreviewDialog();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 190, 216, 255),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.visibility),
+                label: const Text(
+                  'Preview Card',
+                  style: TextStyle(color: Color.fromARGB(255, 34, 81, 190)),
+                ),
+              ),
+              const SizedBox(height: 15),
               OutlinedButton.icon(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
@@ -184,39 +210,14 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
                   }
                 },
                 style: OutlinedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 124, 177, 255),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                icon: const Icon(Icons.visibility),
+
                 label: Text(
-                  'Preview Card',
-                  style: TextStyle(color: theme.colorScheme.primary),
-                ),
-              ),
-              const SizedBox(height: 15),
-
-              ElevatedButton.icon(
-                onPressed: () {
-                  // if (_formKey.currentState!.validate()) {
-                  //   _submitCard();
-                  // }
-
-                  //   Navigator.push(
-                  //     context,
-                  //     MaterialPageRoute(builder: (context) => CheckoutScreen()),
-                  //   );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: const Icon(Icons.check_circle_outline),
-                label: const Text(
                   'Create Gift Card',
                   style: TextStyle(color: Colors.white),
                 ),
@@ -233,16 +234,33 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
     required TextEditingController controller,
     required IconData icon,
     int maxLines = 1,
+    required Color iconColor,
   }) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
+      style: const TextStyle(color: Colors.black), // <-- Add this line
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon),
+        labelStyle: TextStyle(color: blueColor), // Blue label text
+        prefixIcon: Icon(icon, color: iconColor),
         filled: true,
         fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: blueColor), // Blue border
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: blueColor), // Blue border when enabled
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: blueColor,
+            width: 2,
+          ), // Thicker blue border when focused
+        ),
       ),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {

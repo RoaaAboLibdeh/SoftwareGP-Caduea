@@ -37,30 +37,30 @@ class _MoveToCheckoutAndPayState extends State<MoveToCheckoutAndPay>
   bool _isProcessing = false;
 
   // Payment options data
-  final List<Map<String, dynamic>> _paymentOptions = [
-    {
-      'title': 'Pay in Store',
-      'subtitle': 'Visit our store to complete payment',
-      'icon': Icons.store,
-      'color': const Color(0xFF0984E3),
-      'gradient': const LinearGradient(
-        colors: [Color(0xFF0984E3), Color(0xFF74B9FF)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-    },
-    // {
-    //   'title': 'Pay with Cash',
-    //   'subtitle': 'Pay when you receive your order',
-    //   'icon': Icons.wallet,
-    //   'color': const Color(0xFF00B894),
-    //   'gradient': const LinearGradient(
-    //     colors: [Color(0xFF00B894), Color(0xFF74B9FF)],
-    //     begin: Alignment.topLeft,
-    //     end: Alignment.bottomRight,
-    //   ),
-    // },
-  ];
+  // final List<Map<String, dynamic>> _paymentOptions = [
+  //   // {
+  //   //   'title': 'Pay in Store',
+  //   //   'subtitle': 'Visit our store to complete payment',
+  //   //   'icon': Icons.store,
+  //   //   'color': const Color(0xFF0984E3),
+  //   //   'gradient': const LinearGradient(
+  //   //     colors: [Color(0xFF0984E3), Color(0xFF74B9FF)],
+  //   //     begin: Alignment.topLeft,
+  //   //     end: Alignment.bottomRight,
+  //   //   ),
+  //   // },
+  //   // {
+  //   //   'title': 'Pay with Cash',
+  //   //   'subtitle': 'Pay when you receive your order',
+  //   //   'icon': Icons.wallet,
+  //   //   'color': const Color(0xFF00B894),
+  //   //   'gradient': const LinearGradient(
+  //   //     colors: [Color(0xFF00B894), Color(0xFF74B9FF)],
+  //   //     begin: Alignment.topLeft,
+  //   //     end: Alignment.bottomRight,
+  //   //   ),
+  //   // },
+  // ];
 
   @override
   void initState() {
@@ -172,7 +172,7 @@ class _MoveToCheckoutAndPayState extends State<MoveToCheckoutAndPay>
               giftBoxData: widget.giftBoxData,
               giftCardData: widget.giftCardData,
               paymentMethod:
-                  _selectedOption == 0 ? 'Pay in Store' : 'Pay with Cash',
+                  _selectedOption == 0 ? 'Pay with Cash' : 'Pay with Card',
             ),
       ),
     );
@@ -296,24 +296,24 @@ class _MoveToCheckoutAndPayState extends State<MoveToCheckoutAndPay>
                 ),
 
                 // Payment options
-                Column(
-                  children: List.generate(_paymentOptions.length, (index) {
-                    final option = _paymentOptions[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: _PaymentOptionCard(
-                        index: index,
-                        isSelected: _selectedOption == index,
-                        onSelect: _selectOption,
-                        icon: option['icon'] as IconData,
-                        title: option['title'] as String,
-                        subtitle: option['subtitle'] as String,
-                        gradient: option['gradient'] as Gradient,
-                        color: option['color'] as Color,
-                      ),
-                    );
-                  }),
-                ),
+                // Column(
+                //   children: List.generate(_paymentOptions.length, (index) {
+                //     final option = _paymentOptions[index];
+                //     return Padding(
+                //       padding: const EdgeInsets.only(bottom: 16),
+                //       child: _PaymentOptionCard(
+                //         index: index,
+                //         isSelected: _selectedOption == index,
+                //         onSelect: _selectOption,
+                //         icon: option['icon'] as IconData,
+                //         title: option['title'] as String,
+                //         subtitle: option['subtitle'] as String,
+                //         gradient: option['gradient'] as Gradient,
+                //         color: option['color'] as Color,
+                //       ),
+                //     );
+                //   }),
+                // ),
                 //pay when u recive your order
                 GestureDetector(
                   onTap: _navigateToMapPage,
@@ -355,7 +355,7 @@ class _MoveToCheckoutAndPayState extends State<MoveToCheckoutAndPay>
                 // Card Payment button
                 const SizedBox(height: 20),
                 GestureDetector(
-                  onTap: _navigateToCardPayment,
+                  onTap: _navigateToMapPage,
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(

@@ -107,12 +107,85 @@ class _HomePagePaymentState extends State<HomePagePayment> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Beautiful payment prompt section
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              margin: const EdgeInsets.only(bottom: 32),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.shade100,
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.payment_rounded,
+                    size: 48,
+                    color: Color.fromARGB(255, 124, 177, 255),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Complete Your Purchase',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Total Amount: \$${amount.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Ready to make your payment?\nYour order will be processed immediately.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.grey.shade600,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Payment button
             ElevatedButton(
               onPressed: () {
                 paymentSheetInitialization(amount.round().toString(), "USD");
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              child: Text("Pay Now", style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromARGB(255, 124, 177, 255),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 36,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 3,
+                shadowColor: Colors.blue.shade100,
+              ),
+              child: const Text(
+                "Pay Now",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
