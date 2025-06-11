@@ -29,7 +29,7 @@ class SearchResultPage extends StatelessWidget {
         elevation: 1,
         iconTheme: IconThemeData(color: Colors.black),
         titleTextStyle: TextStyle(
-          color: Color(0x806F61EF),
+          color: Color.fromARGB(255, 113, 169, 254),
           fontWeight: FontWeight.bold,
           fontSize: 18,
         ),

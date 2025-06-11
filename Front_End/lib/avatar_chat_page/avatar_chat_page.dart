@@ -291,13 +291,9 @@ class _AvatarChatPageState extends State<AvatarChatPage> {
                   Expanded(
                     child: TextField(
                       controller: _controller,
-                      onSubmitted: (text) {
-                        sendMessageToBot(text);
-                        _controller.clear();
-                      },
                       decoration: InputDecoration(
                         hintText: 'Ask for a gift idea...',
-                        border: OutlineInputBorder(),
+                        // border: OutlineInputBorder(),
                       ),
                     ),
                   ),
@@ -306,8 +302,20 @@ class _AvatarChatPageState extends State<AvatarChatPage> {
                       Icons.emoji_emotions_outlined,
                       color: Colors.grey[600],
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      // Optionally open emoji picker
+                    },
                   ),
+                  // IconButton(
+                  //   icon: Icon(Icons.send, color: Colors.blueAccent),
+                  //   onPressed: () {
+                  //     final text = _controller.text.trim();
+                  //     if (text.isNotEmpty) {
+                  //       sendMessageToBot(text);
+                  //       _controller.clear();
+                  //     }
+                  //   },
+                  // ),
                 ],
               ),
             ),
@@ -317,7 +325,13 @@ class _AvatarChatPageState extends State<AvatarChatPage> {
             backgroundColor: Color.fromARGB(255, 124, 177, 255),
             child: IconButton(
               icon: const Icon(Icons.send, color: Colors.white, size: 20),
-              onPressed: _sendMessage,
+              onPressed: () {
+                final text = _controller.text.trim();
+                if (text.isNotEmpty) {
+                  sendMessageToBot(text);
+                  _controller.clear();
+                }
+              },
             ),
           ),
         ],

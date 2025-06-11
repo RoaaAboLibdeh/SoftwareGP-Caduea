@@ -1,4 +1,5 @@
 import 'package:avatar_plus/avatar_plus.dart';
+import 'package:cadeau_project/Categories/CategoryProductsPage.dart';
 import 'package:cadeau_project/RandomBox/RandomBoxSelectionPage.dart';
 import 'package:cadeau_project/User_Profile/user_profile.dart';
 import 'package:cadeau_project/avatar_chat_page/avatar_chat_page.dart';
@@ -22,6 +23,8 @@ import '/Categories/ListCategories.dart';
 import 'package:http/http.dart' as http;
 import '/models/product_model.dart';
 import '/services/product_service.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 class userHomePage extends StatefulWidget {
   final String userId;
@@ -62,6 +65,15 @@ class _userHomePageState extends State<userHomePage> {
     'banana1': 'Jenny',
     'helda23er': 'Welliam',
     'sarah1234': 'Fai',
+  };
+  Map<String, String> categoryIdMap = {
+    'Electronics':
+        '680598ee06bcf640dab35547', // Replace with your actual category IDs
+    'Handmade': '6812ac9393bb4108570ef160',
+    'Toys': '6805993e06bcf640dab3554e',
+    'Home Decor': '6805990806bcf640dab35549',
+    'Books': '6805997006bcf640dab35554',
+    'Personalized': '6805996006bcf640dab35552',
   };
   Map<String, dynamic>? userData;
   bool isLoading = true;
@@ -317,39 +329,104 @@ class _userHomePageState extends State<userHomePage> {
     );
   }
 
-  Widget _buildSpecialFeatureButton({
-    required IconData icon,
+  Widget _buildImageFeatureButton({
+    required String imageAsset,
     required String label,
-    required Color color,
     required VoidCallback onTap,
   }) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
-        child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 8),
-          padding: EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withOpacity(0.3), width: 1),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 32, color: color),
-              SizedBox(height: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-                textAlign: TextAlign.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Image with cute bounce animation when pressed
+            MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: TweenAnimationBuilder(
+                duration: Duration(milliseconds: 100),
+                tween: Tween<double>(begin: 1, end: 1),
+                builder:
+                    (context, scale, child) => Transform.scale(
+                      scale: scale,
+                      child: Image.asset(
+                        imageAsset,
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
               ),
-            ],
+            ),
+            SizedBox(height: 8),
+            // Cute text with shadow
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color.fromARGB(255, 8, 8, 8),
+                shadows: [
+                  Shadow(
+                    color: Colors.white,
+                    blurRadius: 2,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Add this helper method to your widget class
+  Widget _buildCategoryItem(String categoryName, String imagePath) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => CategoryProductsPage(
+                  category: categoryName,
+                  categoryId:
+                      categoryIdMap[categoryName] ??
+                      '1', // Default to first category if not found
+                  userId: widget.userId, // Pass the userId from parent widget
+                ),
           ),
+        );
+      },
+      child: Container(
+        width: 80, // Fixed width for each category item
+        margin: EdgeInsets.symmetric(horizontal: 8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                color: Colors.grey[200],
+                image: DecorationImage(
+                  image: AssetImage(imagePath),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              categoryName,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );
@@ -488,122 +565,302 @@ class _userHomePageState extends State<userHomePage> {
             // Main Content
             SliverList(
               delegate: SliverChildListDelegate([
-                // Special Features Section
+                // Hero Banner
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  child: Row(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
                     children: [
-                      _buildSpecialFeatureButton(
-                        icon: Icons.card_giftcard,
-                        label: 'Random Box',
-                        color: Colors.purple,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => RandomBoxSelectionPage(
-                                    userId: widget.userId,
-                                  ),
-                            ),
-                          );
-                        },
+                      // Scrolling discount tags
+                      Container(
+                        height:
+                            120, // Increased height to accommodate images and text
+                        margin: EdgeInsets.only(bottom: 12),
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                                _buildCategoryItem(
+                                  'Electronics',
+                                  'assets/images/electronics.png',
+                                ),
+                                _buildCategoryItem(
+                                  'Handmade',
+                                  'assets/images/handmade.png',
+                                ),
+                                _buildCategoryItem(
+                                  'Toys',
+                                  'assets/images/toys.png',
+                                ),
+                                _buildCategoryItem(
+                                  'Home Decor',
+                                  'assets/images/home_decor.png',
+                                ),
+                                _buildCategoryItem(
+                                  'Books',
+                                  'assets/images/books.png',
+                                ),
+                                _buildCategoryItem(
+                                  'Personalized',
+                                  'assets/images/Personalized.png',
+                                ),
+                              ]
+                              .animate(interval: 100.ms)
+                              .slideX(begin: 0.5, end: 0),
+                        ),
                       ),
-                      _buildSpecialFeatureButton(
-                        icon: Icons.coffee,
-                        label: '3D Mugs',
-                        color: Colors.orange,
-                        onTap: () {
-                          // Navigate to 3D mugs category
-                        },
+
+                      // Main banner
+                      Container(
+                        height: 220,
+                        width: double.infinity,
+                        margin: const EdgeInsets.symmetric(
+                          // horizontal: 8,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 20,
+                              spreadRadius: 4,
+                              offset: Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Stack(
+                          children: [
+                            // Background Carousel - Now fully visible
+                            Positioned.fill(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(24),
+                                child: CarouselSlider(
+                                  options: CarouselOptions(
+                                    height: double.infinity,
+                                    viewportFraction: 1.0,
+                                    autoPlay: true,
+                                    autoPlayInterval: Duration(seconds: 3),
+                                  ),
+                                  items:
+                                      [
+                                        'assets/images/cute_gift_box.jpg',
+                                        'assets/images/gift_box2.jpg',
+                                        'assets/images/teddy_gift.jpg',
+                                        'assets/images/gift3.jpg',
+                                        'assets/images/gifts.jpg',
+                                      ].map((path) {
+                                        return Image.asset(
+                                          path,
+                                          fit: BoxFit.cover,
+                                        );
+                                      }).toList(),
+                                ),
+                              ),
+                            ),
+
+                            // Semi-transparent overlay for better text visibility
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(24),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.black.withOpacity(0.2),
+                                      Colors.black.withOpacity(0.4),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // Cute floating elements
+                            Positioned(
+                              top: -20,
+                              right: -20,
+                              child: Icon(
+                                Icons.star,
+                                size: 120,
+                                color: Colors.white.withOpacity(0.3),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: -30,
+                              left: -30,
+                              child: Icon(
+                                Icons.favorite,
+                                size: 100,
+                                color: Colors.white.withOpacity(0.3),
+                              ),
+                            ),
+
+                            // Content
+                            Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '🎀',
+                                        style: TextStyle(fontSize: 28),
+                                      ),
+                                      SizedBox(width: 6),
+                                      Flexible(
+                                        child: Text(
+                                          'CADEAU MAGIC',
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.white,
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.w800,
+                                            shadows: [
+                                              Shadow(
+                                                color: Colors.black.withOpacity(
+                                                  0.3,
+                                                ),
+                                                blurRadius: 4,
+                                                offset: Offset(1, 1),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 6),
+                                  Flexible(
+                                    child: RichText(
+                                      text: TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: 'Up to ',
+                                            style: GoogleFonts.poppins(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: '50% OFF ',
+                                            style: GoogleFonts.poppins(
+                                              color: Colors.yellowAccent,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: 'on gifts!',
+                                            style: GoogleFonts.poppins(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(height: 12),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) =>
+                                                  ProductsWithDiscountPage(
+                                                    userId: widget.userId,
+                                                  ),
+                                        ),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: Color.fromARGB(
+                                        255,
+                                        113,
+                                        182,
+                                        255,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(18),
+                                      ),
+                                      elevation: 6,
+                                      shadowColor: Color.fromARGB(
+                                        255,
+                                        148,
+                                        200,
+                                        239,
+                                      ).withOpacity(0.5),
+                                      side: BorderSide(
+                                        color: const Color.fromARGB(
+                                          255,
+                                          136,
+                                          208,
+                                          252,
+                                        ),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'SHOP NOW!',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        SizedBox(width: 6),
+                                        Icon(
+                                          Icons.arrow_forward_rounded,
+                                          size: 18,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-
-                // Hero Banner
+                // Special Features Section (now comes after banner)
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Stack(
-                      children: [
-                        // Lottie animation that automatically repeats
-                        Lottie.asset(
-                          'assets/sales2.json',
-                          height: 180,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          repeat:
-                              true, // This makes the animation loop indefinitely
-                        ),
-                        Container(
-                          height: 180,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                              colors: [
-                                Colors.black.withOpacity(0.7),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                          padding: EdgeInsets.all(16),
-                          alignment: Alignment.bottomLeft,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Summer Sale',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Up to 50% off selected items',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              SizedBox(height: 12),
-                              ElevatedButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) => ProductsWithDiscountPage(
-                                            userId: widget.userId,
-                                          ),
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  child: Row(
+                    children: [
+                      _buildImageFeatureButton(
+                        imageAsset: 'assets/images/gift1.png',
+                        label: 'Choose a Surprise Box!',
+                        onTap:
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => RandomBoxSelectionPage(
+                                      userId: widget.userId,
                                     ),
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Color.fromARGB(
-                                    255,
-                                    124,
-                                    177,
-                                    255,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Shop Now',
-                                  style: TextStyle(color: Colors.white),
-                                ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                            ),
+                      ),
+                      _buildImageFeatureButton(
+                        imageAsset: 'assets/images/3d_mug.png',
+                        label: 'Customize Your Mug!',
+                        onTap: () {
+                          /* Mug navigation */
+                        },
+                      ),
+                    ],
                   ),
                 ),
 

@@ -92,6 +92,7 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
 
               _buildInputField(
                 label: 'Your Name',
+                color: Colors.black,
                 controller: _nameController,
                 icon: Icons.person_outline,
                 iconColor: blueColor,
@@ -99,6 +100,7 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
               const SizedBox(height: 20),
               _buildInputField(
                 label: "Recipient's Name",
+                color: Colors.black,
                 controller: _recipientController,
                 icon: Icons.card_giftcard,
                 iconColor: blueColor,
@@ -106,6 +108,7 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
               const SizedBox(height: 20),
               _buildInputField(
                 label: 'Your Message',
+                color: Colors.black,
                 controller: _messageController,
                 icon: Icons.message_outlined,
                 maxLines: 4,
@@ -180,7 +183,7 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
                 icon: const Icon(Icons.visibility),
                 label: const Text(
                   'Preview Card',
-                  style: TextStyle(color: Color.fromARGB(255, 34, 81, 190)),
+                  style: TextStyle(color: Color.fromARGB(255, 15, 44, 110)),
                 ),
               ),
               const SizedBox(height: 15),
@@ -235,6 +238,7 @@ class _ChoosingCardForGiftState extends State<ChoosingCardForGift> {
     required IconData icon,
     int maxLines = 1,
     required Color iconColor,
+    required Color color,
   }) {
     return TextFormField(
       controller: controller,

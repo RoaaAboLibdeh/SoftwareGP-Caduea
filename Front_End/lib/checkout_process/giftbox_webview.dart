@@ -144,7 +144,7 @@ class _GiftBoxWebViewState extends State<GiftBoxWebView> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+                  backgroundColor: const Color.fromARGB(255, 124, 177, 255),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),

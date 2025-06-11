@@ -75,6 +75,7 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -93,37 +94,31 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
       body:
           isLoading
               ? Center(
-                child: CircularProgressIndicator(color: Color(0xFF6F61EF)),
+                child: CircularProgressIndicator(
+                  color: Color.fromARGB(255, 108, 164, 255),
+                ),
               )
               : errorMessage.isNotEmpty
               ? Center(child: Text(errorMessage))
               : products.isEmpty
               ? Center(child: Text('No products found in this category'))
-              : SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 0.75,
-                        ),
-                        itemCount: products.length,
-                        itemBuilder: (context, index) {
-                          final product = Product.fromJson(products[index]);
-                          return _buildSmallProductCard(
-                            context: context,
-                            product: product,
-                          );
-                        },
-                      ),
-                    ],
+              : Padding(
+                padding: EdgeInsets.all(12),
+                child: GridView.builder(
+                  itemCount: products.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.60, // Adjusted for better proportion
                   ),
+                  itemBuilder: (context, index) {
+                    final product = Product.fromJson(products[index]);
+                    return _buildSmallProductCard(
+                      context: context,
+                      product: product,
+                    );
+                  },
                 ),
               ),
     );
