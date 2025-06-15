@@ -8,6 +8,7 @@ import 'package:cadeau_project/product/ProductDetailsForUser/ProductDetailsForUs
 import 'package:cadeau_project/products_with_discount/products_with_discount.dart';
 import 'package:cadeau_project/searchResults/searchResult.dart';
 import 'package:cadeau_project/userCart/userCart.dart';
+import 'package:cadeau_project/userHomePage/OccasionProductsPage.dart';
 import 'package:cadeau_project/userHomePage/userHomePage_model.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
@@ -383,25 +384,22 @@ class _userHomePageState extends State<userHomePage> {
   }
 
   // Add this helper method to your widget class
-  Widget _buildCategoryItem(String categoryName, String imagePath) {
+  Widget _buildOccasionItem(String occasionName, String imagePath) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder:
-                (context) => CategoryProductsPage(
-                  category: categoryName,
-                  categoryId:
-                      categoryIdMap[categoryName] ??
-                      '1', // Default to first category if not found
+                (context) => OccasionProductsPage(
+                  occasion: occasionName,
                   userId: widget.userId, // Pass the userId from parent widget
                 ),
           ),
         );
       },
       child: Container(
-        width: 80, // Fixed width for each category item
+        width: 80, // Fixed width for each occasion item
         margin: EdgeInsets.symmetric(horizontal: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -411,7 +409,7 @@ class _userHomePageState extends State<userHomePage> {
               height: 60,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
-                color: Colors.grey[200],
+                color: const Color.fromARGB(255, 255, 254, 254),
                 image: DecorationImage(
                   image: AssetImage(imagePath),
                   fit: BoxFit.cover,
@@ -420,7 +418,7 @@ class _userHomePageState extends State<userHomePage> {
             ),
             SizedBox(height: 8),
             Text(
-              categoryName,
+              occasionName,
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -578,29 +576,25 @@ class _userHomePageState extends State<userHomePage> {
                         child: ListView(
                           scrollDirection: Axis.horizontal,
                           children: [
-                                _buildCategoryItem(
-                                  'Electronics',
-                                  'assets/images/electronics.png',
+                                _buildOccasionItem(
+                                  'Birthday',
+                                  'assets/images/ballons.png',
                                 ),
-                                _buildCategoryItem(
-                                  'Handmade',
+                                _buildOccasionItem(
+                                  'Graduation',
+                                  'assets/images/Graduation.png',
+                                ),
+                                _buildOccasionItem(
+                                  'Valentine',
+                                  'assets/images/valentine.png',
+                                ),
+                                _buildOccasionItem(
+                                  'Christmas',
+                                  'assets/images/chris.png',
+                                ),
+                                _buildOccasionItem(
+                                  'Anniversary',
                                   'assets/images/handmade.png',
-                                ),
-                                _buildCategoryItem(
-                                  'Toys',
-                                  'assets/images/toys.png',
-                                ),
-                                _buildCategoryItem(
-                                  'Home Decor',
-                                  'assets/images/home_decor.png',
-                                ),
-                                _buildCategoryItem(
-                                  'Books',
-                                  'assets/images/books.png',
-                                ),
-                                _buildCategoryItem(
-                                  'Personalized',
-                                  'assets/images/Personalized.png',
                                 ),
                               ]
                               .animate(interval: 100.ms)
