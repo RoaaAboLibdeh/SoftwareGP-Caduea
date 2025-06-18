@@ -929,21 +929,17 @@ class _userHomePageState extends State<userHomePage> {
                         padding: EdgeInsets.zero,
                         primary: false,
                         shrinkWrap: true,
-                        scrollDirection: Axis.vertical,
-                        itemCount: (products.length / 2).ceil(),
+                        itemCount:
+                            (products.length + 1) ~/ 2, // Handles odd counts
                         itemBuilder: (context, index) {
                           final firstIndex = index * 2;
                           final secondIndex = firstIndex + 1;
 
                           return Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                              16,
-                              0,
-                              16,
-                              0,
-                            ),
+                            padding: EdgeInsets.symmetric(horizontal: 16),
                             child: Row(
                               children: [
+                                // First product in row
                                 if (firstIndex < products.length)
                                   Expanded(
                                     child: _buildSmallProductCard(
@@ -951,7 +947,10 @@ class _userHomePageState extends State<userHomePage> {
                                       product: products[firstIndex],
                                     ),
                                   ),
-                                SizedBox(width: 8),
+                                // Spacer (only if second product exists)
+                                if (secondIndex < products.length)
+                                  SizedBox(width: 8),
+                                // Second product in row (if exists)
                                 if (secondIndex < products.length)
                                   Expanded(
                                     child: _buildSmallProductCard(
